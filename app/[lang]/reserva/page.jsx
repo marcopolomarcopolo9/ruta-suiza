@@ -1,4 +1,4 @@
-import CalEmbed from '../../../components/CalEmbed';
+import BookingPicker from '../../../components/BookingPicker';
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { recordPayment } from '../../../lib/store';
 
@@ -25,7 +25,6 @@ export default async function Reserva({ params, searchParams }) {
   if (preview) session = { payment_status: 'paid', customer_details: { name: 'Prénom Test', email: '' } };
   const paid = session?.payment_status === 'paid';
   if (paid && !preview) { try { await recordPayment(session); } catch { /* webhook will retry */ } }
-  const cal = process.env.NEXT_PUBLIC_CAL_LINK;
   const c = session?.customer_details || {};
 
   if (!paid) {
@@ -44,15 +43,10 @@ export default async function Reserva({ params, searchParams }) {
         {preview ? <p className="note">👀 Aperçu admin : aucun paiement n'a été fait. Voici ce que voit ton client après avoir payé CHF 39.</p> : null}
         <div className="eyebrow">Ruta Suiza</div>
         <h1>{t.ok}</h1>
-        <p className="lead">{cal ? t.okSub : t.noCal}</p>
+        <p className="lead">{t.okSub}</p>
         <p className="muted">{t.receipt}</p>
       </div>
-      {cal ? (
-        <>
-          <CalEmbed calLink={cal} name={c.name} email={c.email} lang={lang} />
-          <p><a href={`https://cal.com/${cal}?name=${encodeURIComponent(c.name || '')}&email=${encodeURIComponent(c.email || '')}`} target="_blank" rel="noopener">{t.open} ↗</a></p>
-        </>
-      ) : null}
+      <BookingPicker sessionId={preview ? 'preview' : session.id} lang={lang} />
     </section>
   );
 }
