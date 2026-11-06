@@ -19,7 +19,8 @@ export async function POST(req) {
     email: clean(body.email, 120),
     country: clean(body.country, 60),
     message: clean(body.message, 2000),
-    kind: body.kind === 'pregunta' ? 'pregunta' : 'llamada',
+    kind: ['pregunta', 'club'].includes(body.kind) ? body.kind : 'llamada',
+    canton: clean(body.canton, 60),
     lang: body.lang === 'fr' ? 'fr' : 'es',
     page: clean(body.page, 200),
     consent: body.consent === 'on' || body.consent === true,
@@ -33,7 +34,8 @@ export async function POST(req) {
   const url = process.env.LEAD_WEBHOOK_URL;
   if (!url) return Response.json({ ok: false, error: 'not_configured' }, { status: 503 });
 
-  const subject = `${lead.kind === 'pregunta' ? 'Pregunta gratis' : 'Hablar con una persona'} · ${lead.first} ${lead.last} (${lead.country})`;
+  const label = { pregunta: 'Pregunta gratis', llamada: 'Hablar con una persona', club: 'Club · lista de espera' }[lead.kind];
+  const subject = `${label} · ${lead.first} ${lead.last} (${lead.country}${lead.canton ? `, ${lead.canton}` : ''})`;
   try {
     const r = await fetch(url, {
       method: 'POST',

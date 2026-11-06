@@ -59,6 +59,29 @@ export function openModal(lang, kind) {
   setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
+function bindClub(lang) {
+  const f = document.getElementById('clubform');
+  if (!f) return;
+  const ok = document.getElementById('clubok');
+  const err = f.querySelector('.lerr');
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!f.checkValidity()) { f.reportValidity(); return; }
+    const data = Object.fromEntries(new FormData(f).entries());
+    data.kind = 'club'; data.lang = lang; data.page = location.pathname;
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true; err.hidden = true;
+    try {
+      const r = await fetch('/api/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!r.ok) throw new Error(String(r.status));
+      f.hidden = true; ok.hidden = false;
+      ok.innerHTML = `<b>${T(['¡Bienvenido/a al Club, ', 'Bienvenue au Club, '])}${esc(data.first)}!</b><p>${T(['Tu plaza de miembro fundador está reservada. Te escribimos en cuanto abramos.', 'Ta place de membre fondateur est réservée. On t\'écrit dès l\'ouverture.'])}</p>`;
+    } catch (x) {
+      err.hidden = false;
+      err.textContent = T(['No se pudo enviar. Inténtalo de nuevo en unos minutos.', "L'envoi n'a pas fonctionné. Réessaie dans quelques minutes."]);
+    } finally { btn.disabled = false; }
+  };
+}
+
 function bindUnlockFor(lang) {
   return () => {
     document.querySelectorAll('.unlock,.buy').forEach((b) => { b.onclick = () => openModal(lang); });
@@ -145,6 +168,7 @@ export default function Enhance({ lang, view, arg }) {
       window.addEventListener('popstate', onPop);
     }
     if (view === 'noticias') site.bindNews();
+    if (view === 'club') bindClub(lang);
     if (view === 'legal') site.bindContact();
     bindUnlock();
     linkifyDom(main, lang);
