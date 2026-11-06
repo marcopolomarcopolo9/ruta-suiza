@@ -4,6 +4,7 @@
 // a Make/Zapier webhook) to get an e-mail copy.
 import { storeReady, addLead, allow } from '../../../lib/store';
 import { logError } from '../../../lib/errors';
+import { notifyAdmin, confirmLead } from '../../../lib/mail';
 
 export const runtime = 'nodejs';
 
@@ -63,5 +64,7 @@ export async function POST(req) {
     } catch (e) { await logError('formulaire (copie e-mail)', e); }
   }
   if (!stored && !forwarded) return Response.json({ ok: false, error: 'save_failed' }, { status: 502 });
+  const sent = await Promise.allSettled([notifyAdmin(lead), confirmLead(lead)]);
+  for (const x of sent) if (x.status === 'rejected') await logError('e-mail', x.reason);
   return Response.json({ ok: true });
 }

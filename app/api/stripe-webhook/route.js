@@ -6,6 +6,7 @@ import { recordPayment, addLead } from '../../../lib/store';
 import { stripe } from '../../../lib/stripe';
 import { cmd } from '../../../lib/redis';
 import { logError } from '../../../lib/errors';
+import { notifyAdmin } from '../../../lib/mail';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -37,10 +38,11 @@ export async function POST(req) {
       try { if (o.customer) c = await stripe('GET', `customers/${o.customer}`); } catch { /* keep empty */ }
       const [first, ...rest] = String(c.name || '').trim().split(/\s+/);
       const failed = event.type === 'invoice.payment_failed';
-      await addLead({
+      const lead = await addLead({
         kind: failed ? 'pago_fallido' : 'club_baja', first: first || '', last: rest.join(' '), email: c.email || o.customer_email || '', phone: c.phone || '', country: '', lang: 'es', page: 'stripe', consent: true,
         message: failed ? `Paiement échoué : ${((o.amount_due || 0) / 100).toFixed(2)} ${String(o.currency || '').toUpperCase()} · Stripe relancera automatiquement` : `Abonnement Club terminé (${o.id})`,
       });
+      try { await notifyAdmin(lead); } catch (e) { await logError('e-mail', e); }
     }
   } catch (e) {
     await logError('webhook Stripe', e);
