@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Club', 'k-club'] };
+const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Club', 'k-club'], pago: ['Payé CHF 39', 'k-pay'] };
 const STATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
 const fmt = (iso) => new Date(iso).toLocaleString('fr-CH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 const wa = (p) => `https://wa.me/${String(p).replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
@@ -122,12 +122,13 @@ export default function Admin() {
       </header>
       <section className="adm-stats">
         <div><b>{fresh}</b><span>nouvelles</span></div>
+        <div className="adm-paid"><b>{count('pago')}</b><span>payés (à planifier)</span></div>
         <div><b>{count('llamada')}</b><span>rappels</span></div>
         <div><b>{count('pregunta')}</b><span>questions</span></div>
         <div className="adm-club"><b>{count('club')}</b><span>intéressés Club</span></div>
       </section>
       <section className="adm-filters">
-        <div className="adm-seg">{[['all', 'Tout'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['club', 'Club']].map(([k, v]) => (
+        <div className="adm-seg">{[['all', 'Tout'], ['pago', 'Payés'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['club', 'Club']].map(([k, v]) => (
           <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{v}</button>))}</div>
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filtrer par statut">
           <option value="open">À traiter</option><option value="all">Tous les statuts</option>

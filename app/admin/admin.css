@@ -42,3 +42,7 @@ body.adm{background:var(--bg)}
 .adm-del{color:var(--accent)}
 .adm-empty{text-align:center;color:var(--muted);padding:40px 0}
 @media (max-width:700px){.adm-stats{grid-template-columns:1fr 1fr}.adm-actions{grid-template-columns:1fr}.adm-lead time{margin-left:0;width:100%}}
+.k-pay{background:#e7f6ee;color:#0f7a43}
+.adm-paid{border-color:var(--ok)!important}
+.adm-stats{grid-template-columns:repeat(5,1fr)}
+@media (max-width:700px){.adm-stats{grid-template-columns:1fr 1fr}}

@@ -13,6 +13,17 @@ function setHdr() {
 
 const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+export async function startCheckout(lang, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.url) { location.href = j.url; return true; }
+  } catch (e) { /* fall through */ }
+  if (btn) btn.disabled = false;
+  return false;
+}
+
 export function openModal(lang, kind) {
   const ask = kind === 'ask';
   const modal = document.getElementById('modal');
@@ -27,7 +38,7 @@ export function openModal(lang, kind) {
   const f = document.getElementById('mform');
   const ok = document.getElementById('mok');
   ok.hidden = true; f.hidden = false;
-  f.innerHTML = `
+  f.innerHTML = `${ask ? '' : `<button type="button" class="btn lpay" id="mpay">${T(['Pagar CHF 39 y elegir mi cita', 'Payer CHF 39 et choisir mon rendez-vous'])}</button><small class="paynote">${T(['TWINT o tarjeta · pago seguro con Stripe', 'TWINT ou carte · paiement sécurisé par Stripe'])}</small><div class="lor"><span>${T(['o déjanos tus datos y te llamamos', 'ou laisse tes coordonnées et on t\'appelle'])}</span></div>`}
     <div class="lrow"><label>${T(['Nombre', 'Prénom'])}<input name="first" required autocomplete="given-name"></label>
     <label>${T(['Apellido', 'Nom'])}<input name="last" required autocomplete="family-name"></label></div>
     <label>${T(['Teléfono (WhatsApp)', 'Téléphone (WhatsApp)'])}<input name="phone" type="tel" required autocomplete="tel" placeholder="+41 79 123 45 67"></label>
@@ -38,6 +49,8 @@ export function openModal(lang, kind) {
     <label class="check"><input type="checkbox" name="consent" required> <span>${T([`Acepto la <a href="${pv}">política de privacidad</a> y que me contacten para responderme.`, `J'accepte la <a href="${pv}">politique de confidentialité</a> et d'être contacté·e pour une réponse.`])}</span></label>
     <p class="lerr" id="lerr" hidden></p>
     <div class="lbtns"><button class="btn ghost" type="button" id="mclose">${T(['Cancelar', 'Annuler'])}</button><button class="btn" type="submit">${ask ? T(['Enviar mi pregunta', 'Envoyer ma question']) : T(['Quiero que me llamen', 'Je veux être rappelé·e'])}</button></div>`;
+  const pay = document.getElementById('mpay');
+  if (pay) pay.onclick = async () => { if (!(await startCheckout(lang, pay))) { pay.hidden = true; f.querySelector('.paynote').hidden = true; f.querySelector('.lor').hidden = true; } };
   f.onsubmit = async (e) => {
     e.preventDefault();
     const err = document.getElementById('lerr');
@@ -84,7 +97,8 @@ function bindClub(lang) {
 
 function bindUnlockFor(lang) {
   return () => {
-    document.querySelectorAll('.unlock,.buy').forEach((b) => { b.onclick = () => openModal(lang); });
+    document.querySelectorAll('.unlock').forEach((b) => { b.onclick = () => openModal(lang); });
+    document.querySelectorAll('.buy').forEach((b) => { b.onclick = async () => { if (!(await startCheckout(lang, b))) openModal(lang); }; });
     document.querySelectorAll('.ask').forEach((b) => { b.onclick = () => openModal(lang, 'ask'); });
   };
 }

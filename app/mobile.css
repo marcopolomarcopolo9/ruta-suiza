@@ -317,3 +317,11 @@ html{-webkit-tap-highlight-color:transparent}
 .pillar .faq,.post .faq{margin-top:34px}
 .fcols{grid-template-columns:1.4fr 1fr 1fr 1fr}@media (max-width:700px){.fcols{grid-template-columns:1fr 1fr}.fcols > div:first-child{grid-column:1/-1}}
 .club-join{margin-top:40px}.bgrid + .help,.bgrid + section,.article > .help{margin-top:28px}main > .view > .help:last-child{margin-bottom:8px}
+.reserva{display:grid;gap:16px}
+.rs-cal{width:100%;min-height:640px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:auto}
+.paynote{display:block;font-size:12px;color:var(--muted);text-align:center;margin-top:-4px}
+.plan .paynote{text-align:left;margin-top:0}
+.lpay{justify-content:center;padding:14px;font-size:16px;border-radius:12px}
+.lor{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0}
+.lor::before,.lor::after{content:"";flex:1;height:1px;background:var(--line)}
+.lor[hidden],.lpay[hidden],.paynote[hidden]{display:none!important}
