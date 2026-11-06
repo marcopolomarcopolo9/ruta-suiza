@@ -9,7 +9,7 @@ const d = (t) => (t ? new Date(t).toLocaleDateString('fr-CH', { day: '2-digit', 
 const pad = (n) => String(n).padStart(2, '0');
 const slotLabel = (date, hour) => `${new Date(`${date}T12:00:00Z`).toLocaleDateString('fr-CH', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit' })} · ${pad(hour)}:00`;
 const wa = (p) => `https://wa.me/${String(p || '').replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
-const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'] };
+const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'] };
 const LSTATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
 const CSTATUS = { member: ['Membre', 'b-member'], member_ending: ['Membre (résilie)', 'b-ending'], ex_member: ['Ancien membre', 'b-ex'], customer: ['Client', 'b-customer'], prospect: ['Prospect', 'b-prospect'] };
 const SSTATUS = { active: ['Actif', 'b-member'], trialing: ['Essai', 'b-member'], past_due: ['Paiement en retard', 'b-ending'], canceled: ['Résilié', 'b-ex'], unpaid: ['Impayé', 'b-ending'], incomplete: ['Incomplet', 'b-prospect'], incomplete_expired: ['Expiré', 'b-ex'] };
@@ -107,6 +107,7 @@ function Dashboard({ data, go, openClient, st }) {
     <>
       {bad > 0 && <button type="button" className="alert" onClick={() => go('settings')}>⚠️ {bad} problème{bad > 1 ? 's' : ''} de configuration à régler → voir Réglages</button>}
       {data.stripeError && <div className="alert">Stripe : {data.stripeError}</div>}
+      <div className="quick"><span className="muted small">Aperçus client :</span><a className="ghost" href="/es/reserva?preview=1" target="_blank" rel="noopener">👀 Page après paiement 39.- (calendrier)</a><a className="ghost" href="/es/club/bienvenida?preview=1" target="_blank" rel="noopener">👀 Bienvenue Club</a></div>
       <section className="kpis">
         <div className="kpi"><span>Revenus ce mois</span><b>{CHF(month)}</b><small>mois dernier : {CHF(prev)}</small></div>
         <div className="kpi"><span>Membres Club actifs</span><b>{active.length}</b><small>revenu mensuel récurrent : {CHF(mrr)}</small></div>
@@ -298,6 +299,7 @@ function Agenda({ onChanged }) {
             <button type="button" className="ghost" onClick={() => setWeek(0)} disabled={week === 0}>Aujourd’hui</button>
             <button type="button" className="ghost" onClick={() => setWeek(week + 1)} aria-label="Semaine suivante">→</button>
             <button type="button" className="btn" onClick={() => setShowTpl(!showTpl)}>Mes horaires habituels</button>
+            <a className="ghost" href="/es/reserva?preview=1" target="_blank" rel="noopener">👀 Voir ce que voit le client</a>
           </div>
         </header>
         <p className="muted small legend">Clique sur une case pour l’ouvrir ou la fermer ce jour-là. <span className="lg lg-open">Libre</span><span className="lg lg-closed">Fermé</span><span className="lg lg-booked">Réservé</span> Heure suisse, créneaux d’une heure.</p>
@@ -384,12 +386,109 @@ function Leads({ data, setData }) {
       <header className="card-h"><h2>Demandes <small>{list.length}</small></h2>
         <button type="button" className="ghost" onClick={() => downloadCsv('demandes', [['Date', (l) => dt(l.createdAt)], ['Type', (l) => (KIND[l.kind] || [l.kind])[0]], ['Statut', (l) => LSTATUS[l.status]], ['Prénom', (l) => l.first], ['Nom', (l) => l.last], ['Téléphone', (l) => l.phone], ['E-mail', (l) => l.email], ['Pays', (l) => l.country], ['Message', (l) => l.message], ['Note', (l) => l.note]], list)}>Exporter CSV</button></header>
       <div className="toolbar">
-        <div className="seg">{[['all', 'Tout'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['rdv', 'Rendez-vous'], ['pago', 'Consultations'], ['club_pago', 'Membres'], ['club', 'Intérêt Club']].map(([k, v]) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{v}</button>)}</div>
+        <div className="seg">{[['all', 'Tout'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['contacto', 'Contact'], ['rdv', 'Rendez-vous'], ['pago', 'Consultations'], ['club_pago', 'Membres'], ['club', 'Intérêt Club']].map(([k, v]) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{v}</button>)}</div>
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Statut"><option value="open">À traiter</option><option value="all">Tous les statuts</option>{Object.entries(LSTATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <input type="search" placeholder="Rechercher…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {list.length ? <div className="leads">{list.map((l) => <LeadCard key={l.id} l={l} onPatch={patch} onDelete={del} />)}</div> : <Empty>Aucune demande ici.</Empty>}
     </section>
+  );
+}
+
+/* ---------- news editor ---------- */
+const todayCH = () => new Date().toLocaleDateString('fr-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric' });
+const blankNews = () => ({ id: '', cat: 'inmigracion', k: ['', ''], t: ['', ''], s: ['', ''], you: ['', ''], date: todayCH(), top: false, go: '', img: '', imgUrl: '', imgCredit: '', src: [['', ''], ['', '']] });
+const unesc = (t) => String(t || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const GUIDES = [['', 'Aucun'], ['#instalados-seguro', 'Seguro médico'], ['#instalados-subsidios', 'Subsidios'], ['#instalados-trabajo', 'Trabajo y paro'], ['#instalados-transporte', 'Transporte'], ['#instalados-impuestos', 'Impuestos'], ['#instalados-vivienda', 'Vivienda'], ['#instalados-familia', 'Familia'], ['#guia-permisos', 'Guía permisos'], ['#guia-visa', 'Guía visa D'], ['#vivir-en-suiza', 'Vivir en Suiza'], ['#club', 'Club']];
+function Bi({ label, hint, v, set, rows, max }) {
+  return (
+    <div className="bi"><b>{label}</b>{hint && <small className="muted">{hint}</small>}
+      <div className="bi-row">
+        {[0, 1].map((i) => (rows
+          ? <textarea key={i} rows={rows} maxLength={max} placeholder={i ? 'Français (facultatif)' : 'Español'} value={v[i]} onChange={(e) => { const n = [...v]; n[i] = e.target.value; set(n); }} />
+          : <input key={i} maxLength={max} placeholder={i ? 'Français (facultatif)' : 'Español'} value={v[i]} onChange={(e) => { const n = [...v]; n[i] = e.target.value; set(n); }} />))}
+      </div>
+    </div>
+  );
+}
+function NewsEditor({ init, meta, onDone }) {
+  const [n, setN] = useState(init);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const up = (k) => (v) => setN((x) => ({ ...x, [k]: v }));
+  const save = async () => {
+    setBusy(true); setErr('');
+    const body = { ...n, date: n.date.split('-').length === 3 ? n.date.split('-').reverse().join('.') : n.date, src: n.src.filter((x) => x[0] && x[1]) };
+    const r = await post('/api/admin/news', body);
+    const j = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (r.ok) onDone(j.item); else setErr(j.error === 'title_required' ? 'Le titre en espagnol est obligatoire.' : j.error === 'summary_required' ? 'Le résumé en espagnol est obligatoire.' : 'Enregistrement impossible.');
+  };
+  const isoDate = /^\d{2}\.\d{2}\.\d{4}$/.test(n.date) ? n.date.split('.').reverse().join('-') : n.date;
+  return (
+    <section className="card news-ed">
+      <header className="card-h"><h2>{n.id ? 'Modifier l’actualité' : 'Nouvelle actualité'}</h2><div className="row-btns"><button type="button" className="ghost" onClick={() => onDone(null)}>Annuler</button><button type="button" className="btn" disabled={busy} onClick={save}>{busy ? 'Publication…' : n.id ? 'Enregistrer' : 'Publier'}</button></div></header>
+      {err && <p className="err">{err}</p>}
+      <div className="ed-grid">
+        <label>Catégorie<select value={n.cat} onChange={(e) => up('cat')(e.target.value)}>{Object.entries(meta.cats).map(([k, v]) => <option key={k} value={k}>{v[1]}</option>)}</select></label>
+        <label>Date<input type="date" value={isoDate} onChange={(e) => up('date')(e.target.value)} /><small className="muted">Date future = apparaît dans « Prochaines dates ».</small></label>
+        <label className="chk"><input type="checkbox" checked={n.top} onChange={(e) => up('top')(e.target.checked)} /> À la une (grande photo en haut)</label>
+      </div>
+      <Bi label="Surtitre" hint="1 à 3 mots, ex. « Seguro médico »" v={n.k} set={up('k')} max={40} />
+      <Bi label="Titre *" v={n.t} set={up('t')} max={160} />
+      <Bi label="Résumé *" hint="2 à 4 phrases : ce qui se passe, chiffres, date." v={n.s} set={up('s')} rows={4} max={1500} />
+      <Bi label="Ce que ça change pour toi" hint="Le conseil concret pour tes lecteurs." v={n.you} set={up('you')} rows={3} max={800} />
+      <label className="full">Lien vers une page du site (bouton « Voir le guide »)<select value={n.go} onChange={(e) => up('go')(e.target.value)}>{GUIDES.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+      <div className="bi"><b>Photo</b><small className="muted">Choisis une photo de la bibliothèque, ou colle l’adresse (https://) d’une image libre de droits.</small>
+        <div className="photos">
+          <button type="button" aria-pressed={!n.img && !n.imgUrl} onClick={() => setN((x) => ({ ...x, img: '', imgUrl: '' }))} className="ph-none">Sans photo</button>
+          {meta.photos.map((k) => <button key={k} type="button" aria-pressed={n.img === k} onClick={() => setN((x) => ({ ...x, img: k, imgUrl: '' }))}><img src={`/news/${k}.jpg`} alt={k} /></button>)}
+        </div>
+        <div className="bi-row"><input placeholder="https://… (image externe, facultatif)" value={n.imgUrl} onChange={(e) => setN((x) => ({ ...x, imgUrl: e.target.value, img: '' }))} /><input placeholder="Crédit photo (auteur, licence)" value={n.imgCredit} onChange={(e) => up('imgCredit')(e.target.value)} /></div>
+      </div>
+      <div className="bi"><b>Sources</b><small className="muted">Nom de la source et lien de l’article officiel ou de presse.</small>
+        {n.src.map((x, i) => (
+          <div className="bi-row" key={i}><input placeholder="ex. admin.ch" value={x[0]} onChange={(e) => { const s2 = n.src.map((y) => [...y]); s2[i][0] = e.target.value; up('src')(s2); }} /><input placeholder="https://…" value={x[1]} onChange={(e) => { const s2 = n.src.map((y) => [...y]); s2[i][1] = e.target.value; up('src')(s2); }} /></div>
+        ))}
+        {n.src.length < 5 && <button type="button" className="link" onClick={() => up('src')([...n.src, ['', '']])}>+ Ajouter une source</button>}
+      </div>
+    </section>
+  );
+}
+function NewsAdmin() {
+  const [d, setD] = useState(null);
+  const [edit, setEdit] = useState(null);
+  const [flash, setFlash] = useState('');
+  const load = useCallback(() => fetch('/api/admin/news', { cache: 'no-store' }).then((r) => r.json()).then(setD), []);
+  useEffect(() => { load(); }, [load]);
+  if (!d || !d.cats) return <section className="card"><p className="muted">Chargement…</p></section>;
+  if (edit) return <NewsEditor init={edit} meta={d} onDone={(item) => { setEdit(null); if (item) setFlash(`« ${unesc(item.t[0])} » est en ligne.`); load(); }} />;
+  const del = async (n) => { if (!confirm(`Supprimer « ${unesc(n.t[0])} » du site ?`)) return; await fetch(`/api/admin/news?id=${encodeURIComponent(n.id)}`, { method: 'DELETE' }); load(); };
+  const open = (n) => setEdit({ ...blankNews(), ...n, k: n.k.map(unesc), t: n.t.map(unesc), s: n.s.map(unesc), you: (n.you || ['', '']).map(unesc), imgCredit: unesc(n.imgCredit), src: n.src.length ? n.src.map((x) => [unesc(x[0]), x[1]]) : [['', '']] });
+  return (
+    <>
+      {flash && <div className="okmsg">✅ {flash} <a href="/es/noticias" target="_blank" rel="noopener">Voir Suiza News ↗</a></div>}
+      <section className="card">
+        <header className="card-h"><h2>Actualités publiées depuis le CMS <small>{d.cms.length}</small></h2><button type="button" className="btn" onClick={() => setEdit(blankNews())}>+ Nouvelle actualité</button></header>
+        {d.cms.length ? (
+          <div className="table-wrap"><table className="table">
+            <thead><tr><th>Date</th><th>Titre</th><th>Catégorie</th><th /></tr></thead>
+            <tbody>{d.cms.map((n) => (
+              <tr key={n.id}>
+                <td className="small">{n.date}{n.top && <div><span className="badge k-rdv">À la une</span></div>}</td>
+                <td><b>{unesc(n.t[0])}</b><div className="muted small">Modifiée le {dt(n.updatedAt)}</div></td>
+                <td className="small">{(d.cats[n.cat] || [])[1]}</td>
+                <td className="row-btns"><a className="ghost" href={`/es/noticias/${n.id}`} target="_blank" rel="noopener">Voir</a><button type="button" className="ghost" onClick={() => open(n)}>Modifier</button><button type="button" className="ghost danger-t" onClick={() => del(n)}>Supprimer</button></td>
+              </tr>))}</tbody>
+          </table></div>
+        ) : <Empty>Aucune actualité publiée depuis le CMS. Clique sur « Nouvelle actualité ».</Empty>}
+      </section>
+      <section className="card">
+        <header className="card-h"><h2>Actualités de base <small>{d.file.length}</small></h2></header>
+        <p className="muted small">Celles-ci sont dans le code du site (lib/news.js). Pour en modifier une, crée une nouvelle actualité ou demande-le-moi.</p>
+        <ul className="rows">{d.file.map((n) => <li key={n.id}><span className="small muted" style={{ minWidth: 90, flex: 'none' }}>{n.date}</span><span>{n.t[0]}</span><a className="small" href={`/es/noticias/${n.id}`} target="_blank" rel="noopener">Voir ↗</a></li>)}</ul>
+      </section>
+    </>
   );
 }
 
@@ -407,7 +506,7 @@ function Settings({ st }) {
 }
 
 /* ---------- shell ---------- */
-const NAV = [['dash', 'Tableau de bord', '📊'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['settings', 'Réglages', '⚙️']];
+const NAV = [['dash', 'Tableau de bord', '📊'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['settings', 'Réglages', '⚙️']];
 
 export default function Admin() {
   const [state, setState] = useState('loading');
@@ -461,6 +560,7 @@ export default function Admin() {
         {sec === 'members' && <Members data={data} />}
         {sec === 'agenda' && <Agenda onChanged={load} />}
         {sec === 'leads' && <Leads data={data} setData={setData} />}
+        {sec === 'news' && <NewsAdmin />}
         {sec === 'settings' && <Settings st={st} />}
       </main>
       {cur && <ClientDrawer c={cur} onClose={() => setClient(null)} onNote={saveNote} />}

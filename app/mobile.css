@@ -363,3 +363,4 @@ html{-webkit-tap-highlight-color:transparent}
 .bk-done{justify-items:start;border-left:4px solid var(--ok)}
 .bk-done b{font-size:19px}
 .bk-when{font-size:18px;font-weight:700;margin:0;text-transform:capitalize}
+.tool-h1{font-size:clamp(26px,3.6vw,38px);margin:0 0 18px}

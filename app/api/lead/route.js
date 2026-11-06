@@ -22,7 +22,7 @@ export async function POST(req) {
     email: clean(body.email, 120),
     country: clean(body.country, 60),
     message: clean(body.message, 2000),
-    kind: ['pregunta', 'club'].includes(body.kind) ? body.kind : 'llamada',
+    kind: ['pregunta', 'club', 'contacto'].includes(body.kind) ? body.kind : 'llamada',
     canton: clean(body.canton, 60),
     lang: body.lang === 'fr' ? 'fr' : 'es',
     page: clean(body.page, 200),
@@ -31,7 +31,11 @@ export async function POST(req) {
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(lead.email);
   const phoneOk = /^[+()\d\s.-]{6,}$/.test(lead.phone);
   const club = lead.kind === 'club';
-  if (!emailOk || !lead.consent || (!club && (!lead.first || !lead.last || !lead.country || !phoneOk)) || (lead.kind === 'pregunta' && !lead.message)) {
+  const contact = lead.kind === 'contacto';
+  const bad = contact
+    ? (!lead.first || !(emailOk || phoneOk) || !lead.message || !lead.consent)
+    : (!emailOk || !lead.consent || (!club && (!lead.first || !lead.last || !lead.country || !phoneOk)) || (lead.kind === 'pregunta' && !lead.message));
+  if (bad) {
     return Response.json({ ok: false, error: 'invalid' }, { status: 422 });
   }
 
@@ -45,7 +49,7 @@ export async function POST(req) {
     try { await addLead(lead); stored = true; } catch (e) { console.error('lead store failed', e.message); }
   }
   if (url) {
-    const label = { pregunta: 'Pregunta gratis', llamada: 'Hablar con una persona', club: 'Club · lista de espera' }[lead.kind];
+    const label = { pregunta: 'Pregunta gratis', llamada: 'Hablar con una persona', club: 'Club · lista de espera', contacto: 'Formulario de contacto' }[lead.kind];
     const subject = club ? `${label} · ${lead.email}` : `${label} · ${lead.first} ${lead.last} (${lead.country}${lead.canton ? `, ${lead.canton}` : ''})`;
     try {
       const r = await fetch(url, {

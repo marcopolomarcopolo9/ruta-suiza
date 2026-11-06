@@ -135,9 +135,10 @@ function bindTool() {
   if (d) d.addEventListener('change', (e) => { S.dual = e.target.checked; site.renderResult(); });
 }
 
-export default function Enhance({ lang, view, arg }) {
+export default function Enhance({ lang, view, arg, extra }) {
   useEffect(() => {
     site.setLang(lang);
+    if (extra) site.setExtraNews(extra);
     const bindUnlock = bindUnlockFor(lang);
     site.setBindUnlock(bindUnlock);
     const main = document.querySelector('main');

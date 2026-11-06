@@ -1,8 +1,12 @@
 import { allPaths } from '../lib/render';
 import { SITE_URL } from '../lib/links';
-export default function sitemap() {
+import { listCmsNews } from '../lib/newsStore';
+
+export const revalidate = 3600;
+export default async function sitemap() {
   const now = new Date();
-  return allPaths().map((p) => {
+  const cms = (await listCmsNews()).flatMap((n) => [`/es/noticias/${n.id}`, `/fr/noticias/${n.id}`]);
+  return [...allPaths(), ...cms].map((p) => {
     const rest = p.replace(/^\/(es|fr)/, '');
     return {
       url: `${SITE_URL}${p}`,

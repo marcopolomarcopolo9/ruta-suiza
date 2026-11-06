@@ -8,12 +8,12 @@ import '@fontsource/manrope/800.css';
 import '../globals.css';
 import '../extra.css';
 import '../mobile.css';
+import { notFound } from 'next/navigation';
 import Header from '../../components/Header';
 import MobileNav from '../../components/MobileNav';
 import { navItems, footerHTML, site } from '../../lib/render';
 import { LANGS, SITE_URL } from '../../lib/links';
 
-export const dynamicParams = false;
 export const revalidate = 86400; // refresh dates and news daily
 export function generateStaticParams() { return LANGS.map((lang) => ({ lang })); }
 
@@ -26,6 +26,7 @@ export const viewport = { themeColor: '#d52b1e', width: 'device-width', initialS
 
 export default function LangLayout({ children, params }) {
   const { lang } = params;
+  if (!LANGS.includes(lang)) notFound();
   const nav = navItems(lang);
   site.setLang(lang);
   const menu = site.T(['Menú', 'Menu']);
