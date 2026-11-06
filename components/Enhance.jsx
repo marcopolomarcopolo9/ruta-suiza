@@ -11,7 +11,7 @@ function setHdr() {
   if (h) document.documentElement.style.setProperty('--hdr', `${h.offsetHeight}px`);
 }
 
-function openModal(lang, kind) {
+export function openModal(lang, kind) {
   const ask = kind === 'ask';
   const modal = document.getElementById('modal');
   if (!modal) return;

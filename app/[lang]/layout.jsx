@@ -7,7 +7,9 @@ import '@fontsource/bricolage-grotesque/800.css';
 import '@fontsource/manrope/800.css';
 import '../globals.css';
 import '../extra.css';
+import '../mobile.css';
 import Header from '../../components/Header';
+import MobileNav from '../../components/MobileNav';
 import { navItems, footerHTML, site } from '../../lib/render';
 import { LANGS, SITE_URL } from '../../lib/links';
 
@@ -20,7 +22,7 @@ export const metadata = {
   title: { default: 'Ruta Suiza', template: '%s · Ruta Suiza' },
   applicationName: 'Ruta Suiza',
 };
-export const viewport = { themeColor: '#d52b1e', width: 'device-width', initialScale: 1 };
+export const viewport = { themeColor: '#d52b1e', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default function LangLayout({ children, params }) {
   const { lang } = params;
@@ -34,6 +36,7 @@ export default function LangLayout({ children, params }) {
         <a className="skip" href="#main">{lang === 'es' ? 'Ir al contenido' : 'Aller au contenu'}</a>
         <Header lang={lang} nav={nav} menuLabel={menu} />
         <main className="wrap" id="main">{children}</main>
+        <MobileNav lang={lang} />
         <footer><div className="wrap" id="foot" dangerouslySetInnerHTML={{ __html: foot }} /></footer>
         <div className="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
           <div className="mbox">
