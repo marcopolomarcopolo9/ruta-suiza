@@ -192,3 +192,11 @@ body.adm{background:#f5f6f8;color:#14233a;font-size:15px}
 .errs li{border:1px solid #eaecf0;border-radius:10px;padding:10px 12px;display:grid;gap:4px;font-size:14px}
 .errs pre{white-space:pre-wrap;font-size:11px;background:#f9fafb;padding:8px;border-radius:8px;margin:6px 0 0;max-height:200px;overflow:auto}
 .danger-zone{margin-top:12px;border-top:1px solid #eaecf0;padding-top:14px;display:grid;gap:6px;justify-items:start}.danger-zone p{margin:0}
+.mails{display:grid;grid-template-columns:260px 1fr;gap:14px}
+.mail-list{display:grid;gap:4px;align-content:start}
+.mail-list button{text-align:left;border:1px solid #eaecf0;background:#fff;border-radius:9px;padding:9px 11px;font:inherit;font-size:13px;font-weight:600;color:#475467;cursor:pointer}
+.mail-list button[aria-pressed="true"]{border-color:#d52b1e;background:#fdeceb;color:#b42318}
+.mail-view{display:grid;gap:8px}
+.mail-meta{font-size:13px;background:#f9fafb;border-radius:9px;padding:9px 12px}
+.mail-view iframe{width:100%;height:560px;border:1px solid #eaecf0;border-radius:10px;background:#f2f4f7}
+@media (max-width:800px){.mails{grid-template-columns:1fr}.mail-view iframe{height:480px}}

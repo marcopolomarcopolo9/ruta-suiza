@@ -524,6 +524,26 @@ function NewsAdmin() {
 }
 
 /* ---------- settings ---------- */
+function EmailPreviews() {
+  const [lang, setLang] = useState('es');
+  const [list, setList] = useState(null);
+  const [i, setI] = useState(0);
+  useEffect(() => { setList(null); fetch(`/api/admin/email-preview?lang=${lang}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => setList(j.emails || [])).catch(() => setList([])); }, [lang]);
+  const cur = list && list[i];
+  return (
+    <section className="card">
+      <header className="card-h"><h2>E-mails envoyés aux clients</h2><div className="seg">{[['es', 'Espagnol'], ['fr', 'Français']].map(([k, v]) => <button key={k} type="button" aria-pressed={lang === k} onClick={() => setLang(k)}>{v}</button>)}</div></header>
+      <p className="muted small">Aperçu avec des données d’exemple. Rien n’est envoyé.</p>
+      {!list ? <p className="muted">Chargement…</p> : (
+        <div className="mails">
+          <div className="mail-list">{list.map((m, k) => <button key={k} type="button" aria-pressed={k === i} onClick={() => setI(k)}>{m.label}</button>)}</div>
+          {cur && <div className="mail-view"><div className="mail-meta"><b>Objet :</b> {cur.subject}<br /><b>À :</b> {cur.to}{cur.attachments && cur.attachments.length ? <><br /><b>Pièce jointe :</b> {cur.attachments.join(', ')}</> : null}</div><iframe title={cur.label} srcDoc={cur.html} sandbox="" /></div>}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ErrorsPanel() {
   const [list, setList] = useState(null);
   const load = useCallback(() => fetch('/api/admin/errors', { cache: 'no-store' }).then((r) => r.json()).then((j) => setList(j.errors || [])).catch(() => setList([])), []);
@@ -542,6 +562,7 @@ function ErrorsPanel() {
 function Settings({ st }) {
   return (
     <>
+      <EmailPreviews />
       <ErrorsPanel />
       <section className="card"><header className="card-h"><h2>État de la configuration</h2></header><StatusList st={st} /></section>
       <section className="card"><header className="card-h"><h2>Aperçus (sans paiement)</h2></header>
