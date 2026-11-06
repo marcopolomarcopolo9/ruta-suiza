@@ -24,6 +24,13 @@ export async function startCheckout(lang, btn) {
   return false;
 }
 
+function payUnavailable() {
+  const f = document.getElementById('mform');
+  if (!f) return;
+  ['#mpay', '.paynote', '.lor'].forEach((q) => { const el = f.querySelector(q); if (el) el.hidden = true; });
+  if (!f.querySelector('.paydown')) f.insertAdjacentHTML('afterbegin', `<p class="note paydown">${T(['El pago en línea no está disponible en este momento. Déjanos tus datos y te contactamos para fijar tu cita.', 'Le paiement en ligne n\'est pas disponible pour le moment. Laisse tes coordonnées et on te contacte pour fixer ton rendez-vous.'])}</p>`);
+}
+
 export function openModal(lang, kind) {
   const ask = kind === 'ask';
   const modal = document.getElementById('modal');
@@ -50,7 +57,7 @@ export function openModal(lang, kind) {
     <p class="lerr" id="lerr" hidden></p>
     <div class="lbtns"><button class="btn ghost" type="button" id="mclose">${T(['Cancelar', 'Annuler'])}</button><button class="btn" type="submit">${ask ? T(['Enviar mi pregunta', 'Envoyer ma question']) : T(['Quiero que me llamen', 'Je veux être rappelé·e'])}</button></div>`;
   const pay = document.getElementById('mpay');
-  if (pay) pay.onclick = async () => { if (!(await startCheckout(lang, pay))) { pay.hidden = true; f.querySelector('.paynote').hidden = true; f.querySelector('.lor').hidden = true; } };
+  if (pay) pay.onclick = async () => { if (!(await startCheckout(lang, pay))) payUnavailable(); };
   f.onsubmit = async (e) => {
     e.preventDefault();
     const err = document.getElementById('lerr');
@@ -98,7 +105,7 @@ function bindClub(lang) {
 function bindUnlockFor(lang) {
   return () => {
     document.querySelectorAll('.unlock').forEach((b) => { b.onclick = () => openModal(lang); });
-    document.querySelectorAll('.buy').forEach((b) => { b.onclick = async () => { if (!(await startCheckout(lang, b))) openModal(lang); }; });
+    document.querySelectorAll('.buy').forEach((b) => { b.onclick = async () => { if (!(await startCheckout(lang, b))) { openModal(lang); payUnavailable(); } }; });
     document.querySelectorAll('.ask').forEach((b) => { b.onclick = () => openModal(lang, 'ask'); });
   };
 }

@@ -17,6 +17,51 @@ function csv(rows) {
   a.click();
 }
 
+function checks(st) {
+  const c = [];
+  const add = (lvl, txt) => c.push([lvl, txt]);
+  add(st.store ? 'ok' : 'ko', st.store ? 'Base de données connectée.' : 'Base de données non connectée (Vercel → Storage → Upstash).');
+  if (!st.stripeKey) add('ko', 'Clé Stripe absente : ajoute STRIPE_SECRET_KEY dans Vercel puis redéploie.');
+  else if (st.stripeKey === 'publishable') add('ko', 'Tu as mis la clé PUBLIQUE (pk_…). Il faut la clé SECRÈTE qui commence par sk_.');
+  else if (st.stripeKey === 'restricted') add('warn', 'Clé restreinte (rk_…) : elle doit autoriser Checkout Sessions en écriture.');
+  else if (st.stripeKey === 'unknown') add('ko', 'La clé Stripe ne ressemble pas à une clé secrète (sk_test_… ou sk_live_…). Vérifie le copier-coller.');
+  else add(st.stripeKey === 'live' ? 'ok' : 'warn', st.stripeKey === 'live' ? 'Clé Stripe réelle (live) reçue.' : 'Clé Stripe de TEST : les paiements sont fictifs (carte 4242 4242 4242 4242).');
+  if (st.accountError) add('ko', `Stripe refuse la clé : ${st.accountError}`);
+  if (st.account) {
+    add(st.account.chargesEnabled ? 'ok' : 'ko', st.account.chargesEnabled ? 'Ton compte Stripe peut encaisser.' : 'Ton compte Stripe ne peut pas encore encaisser : termine l’activation dans Stripe (infos de l’activité, identité, IBAN).');
+    if (st.account.country !== 'CH') add('ko', `Ton compte Stripe est enregistré dans le pays « ${st.account.country} ». TWINT n’est proposé qu’aux comptes suisses (CH).`);
+  }
+  if (st.twint) {
+    if (!st.twint.available) add('ko', 'TWINT n’est pas disponible sur ton compte Stripe (compte non suisse ou activation pas terminée).');
+    else if (st.twint.preference !== 'on') add('ko', 'TWINT est désactivé : Stripe → ⚙️ Settings → Payment methods → TWINT → Turn on. En mode test, active-le aussi dans les réglages du mode test.');
+    else add('ok', 'TWINT est activé.');
+  }
+  if (st.twintCheckError) add('warn', `Impossible de vérifier TWINT : ${st.twintCheckError}`);
+  if (st.lastTwintError) add('warn', `Dernier refus de TWINT par Stripe (${fmt(st.lastTwintError.at)}) : ${st.lastTwintError.value}`);
+  if (st.lastCheckoutError) add('ko', `Dernière erreur de paiement (${fmt(st.lastCheckoutError.at)}) : ${st.lastCheckoutError.value}`);
+  add(st.webhook ? 'ok' : 'warn', st.webhook ? 'Webhook Stripe configuré.' : 'Webhook Stripe absent (STRIPE_WEBHOOK_SECRET) : les paiements ne sont enregistrés que si le client revient sur le site.');
+  add(st.cal ? 'ok' : 'warn', st.cal ? `Calendrier Cal.com : ${st.cal}` : 'Calendrier absent (NEXT_PUBLIC_CAL_LINK) : après paiement, le client verra « on te contacte ».');
+  return c;
+}
+
+function Status() {
+  const [st, setSt] = useState(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { fetch('/api/admin/status', { cache: 'no-store' }).then((r) => r.json()).then(setSt).catch(() => setSt({ fail: true })); }, []);
+  if (!st) return null;
+  if (st.fail) return <section className="adm-status"><b>État de la configuration</b><p className="adm-muted">Impossible de lire l’état.</p></section>;
+  const list = checks(st);
+  const bad = list.filter((x) => x[0] === 'ko').length;
+  return (
+    <section className={`adm-status ${bad ? 'has-ko' : ''}`}>
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <b>État de la configuration</b> <span>{bad ? `${bad} problème${bad > 1 ? 's' : ''} à régler` : 'tout est en ordre'}</span> <i>{open ? '▲' : '▼'}</i>
+      </button>
+      {(open || bad > 0) && <ul>{list.map(([lvl, txt], i) => <li key={i} className={`lv-${lvl}`}>{lvl === 'ok' ? '✅' : lvl === 'warn' ? '⚠️' : '❌'} {txt}</li>)}</ul>}
+    </section>
+  );
+}
+
 function Login({ onOk }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
@@ -120,6 +165,7 @@ export default function Admin() {
           <button type="button" onClick={logout}>Déconnexion</button>
         </div>
       </header>
+      <Status />
       <section className="adm-stats">
         <div><b>{fresh}</b><span>nouvelles</span></div>
         <div className="adm-paid"><b>{count('pago')}</b><span>payés (à planifier)</span></div>

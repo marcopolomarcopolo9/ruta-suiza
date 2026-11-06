@@ -46,3 +46,12 @@ body.adm{background:var(--bg)}
 .adm-paid{border-color:var(--ok)!important}
 .adm-stats{grid-template-columns:repeat(5,1fr)}
 @media (max-width:700px){.adm-stats{grid-template-columns:1fr 1fr}}
+.adm-status{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.adm-status.has-ko{border-color:var(--accent)}
+.adm-status > button{width:100%;display:flex;gap:10px;align-items:center;border:0;background:none;padding:12px 16px;cursor:pointer;text-align:left;font:inherit}
+.adm-status > button span{color:var(--muted);font-size:14px}
+.adm-status.has-ko > button span{color:var(--accent);font-weight:700}
+.adm-status > button i{margin-left:auto;font-style:normal;color:var(--muted)}
+.adm-status ul{list-style:none;margin:0;padding:0 16px 14px;display:grid;gap:6px;font-size:14px}
+.adm-status li{line-height:1.45}
+.adm-status .lv-ko{color:var(--accent);font-weight:600}
