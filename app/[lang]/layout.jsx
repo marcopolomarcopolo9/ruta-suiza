@@ -22,7 +22,7 @@ export const metadata = {
   title: { default: 'Ruta Suiza', template: '%s · Ruta Suiza' },
   applicationName: 'Ruta Suiza',
 };
-export const viewport = { themeColor: '#d52b1e', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
+export const viewport = { themeColor: '#f2f4f7', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default function LangLayout({ children, params }) {
   const { lang } = params;

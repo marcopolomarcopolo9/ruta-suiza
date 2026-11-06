@@ -371,3 +371,9 @@ html{-webkit-tap-highlight-color:transparent}
 .bk-local{margin:0;font-weight:600;color:var(--muted)}
 .bk-dur{margin:0}
 .club-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media (max-width:600px){.club-grid{grid-template-columns:1fr}}
+
+/* payment buttons in green */
+.btn.buy,.btn.buy-club,.btn.lpay,#mpay{background:#16a34a;color:#fff;box-shadow:0 6px 16px -8px rgba(22,163,74,.6)}
+.btn.buy:hover,.btn.buy-club:hover,.btn.lpay:hover,#mpay:hover{background:#15803d;filter:none}
+.btn.buy:disabled,.btn.buy-club:disabled,#mpay:disabled{opacity:.7}
+#rs-progress{display:none!important}
