@@ -2,6 +2,9 @@ import CalEmbed from '../../../components/CalEmbed';
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { recordPayment } from '../../../lib/store';
 
+import { cookies } from 'next/headers';
+import { isAdmin } from '../../../lib/adminAuth';
+
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Reserva', robots: { index: false, follow: false } };
 
@@ -18,8 +21,10 @@ export default async function Reserva({ params, searchParams }) {
   if (stripeReady() && /^cs_[A-Za-z0-9_]+$/.test(id)) {
     try { session = await stripe('GET', `checkout/sessions/${id}`); } catch { session = null; }
   }
+  const preview = searchParams?.preview === '1' && isAdmin({ cookies: cookies() });
+  if (preview) session = { payment_status: 'paid', customer_details: { name: 'Prénom Test', email: '' } };
   const paid = session?.payment_status === 'paid';
-  if (paid) { try { await recordPayment(session); } catch { /* webhook will retry */ } }
+  if (paid && !preview) { try { await recordPayment(session); } catch { /* webhook will retry */ } }
   const cal = process.env.NEXT_PUBLIC_CAL_LINK;
   const c = session?.customer_details || {};
 
@@ -36,6 +41,7 @@ export default async function Reserva({ params, searchParams }) {
   return (
     <section className="reserva">
       <div className="article">
+        {preview ? <p className="note">👀 Aperçu admin : aucun paiement n'a été fait. Voici ce que voit ton client après avoir payé CHF 39.</p> : null}
         <div className="eyebrow">Ruta Suiza</div>
         <h1>{t.ok}</h1>
         <p className="lead">{cal ? t.okSub : t.noCal}</p>

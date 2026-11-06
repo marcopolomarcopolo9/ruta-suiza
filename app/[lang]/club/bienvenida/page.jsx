@@ -1,6 +1,9 @@
 import { stripe, stripeReady } from '../../../../lib/stripe';
 import { recordPayment } from '../../../../lib/store';
 
+import { cookies } from 'next/headers';
+import { isAdmin } from '../../../../lib/adminAuth';
+
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Club', robots: { index: false, follow: false } };
 
@@ -15,8 +18,10 @@ export default async function Bienvenida({ params, searchParams }) {
   const id = String(searchParams?.session_id || '');
   let s = null;
   if (stripeReady() && /^cs_[A-Za-z0-9_]+$/.test(id)) { try { s = await stripe('GET', `checkout/sessions/${id}`); } catch { s = null; } }
+  const preview = searchParams?.preview === '1' && isAdmin({ cookies: cookies() });
+  if (preview) s = { payment_status: 'paid', mode: 'subscription', customer_details: { name: 'Prénom Test' } };
   const ok = s?.payment_status === 'paid' && (s.mode === 'subscription' || s.metadata?.product === 'club');
-  if (ok) { try { await recordPayment(s); } catch { /* webhook will retry */ } }
+  if (ok && !preview) { try { await recordPayment(s); } catch { /* webhook will retry */ } }
   if (!ok) {
     return (<section className="article reserva"><div className="eyebrow">Club Ruta Suiza</div><h1>{t.bad}</h1><p className="lead">{t.badSub}</p><a className="btn" href={`/${lang}/club`}>{t.back}</a></section>);
   }
@@ -26,6 +31,7 @@ export default async function Bienvenida({ params, searchParams }) {
   const portal = process.env.NEXT_PUBLIC_STRIPE_PORTAL_URL;
   return (
     <section className="article welcome">
+      {preview ? <p className="note">👀 Aperçu admin : aucun paiement n'a été fait. Voici ce que voit un nouveau membre du Club.</p> : null}
       <div className="eyebrow">Club Ruta Suiza</div>
       <h1>{t.hi}{first ? `, ${first}` : ''}!</h1>
       <p className="lead">{group || wa ? t.sub : t.soon}</p>

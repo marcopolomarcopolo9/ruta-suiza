@@ -10,7 +10,7 @@ body.adm{background:var(--bg)}
 .adm-logo span{font-family:var(--body);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-left:6px}
 .adm-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 0 16px}
 .adm-topbtns{display:flex;gap:8px;flex-wrap:wrap}
-.adm-topbtns button,.adm-del{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:14px}
+.adm-topbtns a,.adm-topbtns button,.adm-del{text-decoration:none;color:inherit;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:14px}
 .adm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .adm-stats div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid}
 .adm-stats b{font-family:var(--display);font-size:30px;line-height:1}

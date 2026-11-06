@@ -161,6 +161,8 @@ export default function Admin() {
       <header className="adm-top">
         <div className="adm-logo">ruta<b>suiza</b> <span>admin</span></div>
         <div className="adm-topbtns">
+          <a href="/es/reserva?preview=1" target="_blank" rel="noopener">Aperçu après paiement 39.-</a>
+          <a href="/es/club/bienvenida?preview=1" target="_blank" rel="noopener">Aperçu bienvenue Club</a>
           <button type="button" onClick={load}>Actualiser</button>
           <button type="button" onClick={() => csv(shown)}>Exporter CSV</button>
           <button type="button" onClick={logout}>Déconnexion</button>
