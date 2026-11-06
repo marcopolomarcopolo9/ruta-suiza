@@ -127,3 +127,18 @@ html{-webkit-tap-highlight-color:transparent}
 }
 @media (max-width:760px){.tbl.stack td .tag{justify-self:start;align-self:start}}
 .card > .tag{justify-self:start}
+
+/* ===== Warm brand blocks (replace the navy panels) ===== */
+.help,.dream{position:relative;overflow:hidden;color:var(--ink)}
+.help{background:#fff;border:1.5px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-top:5px solid var(--accent)}
+.help::after{content:"";position:absolute;right:-26px;bottom:-26px;width:120px;height:120px;opacity:.07;pointer-events:none;
+  background:linear-gradient(var(--accent),var(--accent)) center/36% 100% no-repeat,linear-gradient(var(--accent),var(--accent)) center/100% 36% no-repeat}
+.help > *{position:relative;z-index:1}
+.help p{color:var(--muted)}
+.help .btn.ghost{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.dream{background:var(--sun-soft);border:1.5px solid color-mix(in srgb,var(--sun) 55%,transparent)}
+.dream p{color:color-mix(in srgb,var(--ink) 72%,transparent)}
+.dream .g{background:#fff;border:1px solid color-mix(in srgb,var(--sun) 45%,transparent)}
+.dream .g b{color:var(--accent)}
+.dream .g small{opacity:1;color:var(--muted)}
+@media (max-width:760px){.help .hb{display:grid;grid-template-columns:1fr;width:100%}.help .hb .btn{justify-content:center}}

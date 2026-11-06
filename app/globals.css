@@ -7,12 +7,6 @@
   --body:"Figtree","Segoe UI",system-ui,sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0e1522; --surface:#172133; --ink:#eef2f8; --muted:#9aa6b8; --line:#2a364b;
-    --accent:#ff5446; --sun:#f5c45a; --sun-soft:#3a3120; --ok:#4cc790; --ok-soft:#173528; --warn:#f5c45a; color-scheme:dark;
-  }
-}
 :root[data-theme="dark"]{
   --bg:#0e1522; --surface:#172133; --ink:#eef2f8; --muted:#9aa6b8; --line:#2a364b;
   --accent:#ff5446; --sun:#f5c45a; --sun-soft:#3a3120; --ok:#4cc790; --ok-soft:#173528; --warn:#f5c45a; color-scheme:dark;
