@@ -13,10 +13,10 @@ function setHdr() {
 
 const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export async function startCheckout(lang, btn) {
+export async function startCheckout(lang, btn, product) {
   if (btn) btn.disabled = true;
   try {
-    const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang }) });
+    const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang, product }) });
     const j = await r.json().catch(() => ({}));
     if (r.ok && j.url) { location.href = j.url; return true; }
   } catch (e) { /* fall through */ }
@@ -105,6 +105,10 @@ function bindClub(lang) {
 function bindUnlockFor(lang) {
   return () => {
     document.querySelectorAll('.unlock').forEach((b) => { b.onclick = () => openModal(lang); });
+    document.querySelectorAll('.buy-club').forEach((b) => { b.onclick = async () => {
+      if (await startCheckout(lang, b, 'club')) return;
+      const box = b.parentElement; if (box && !box.querySelector('.paydown')) box.insertAdjacentHTML('beforeend', `<p class="note paydown">${T(['El pago en línea no está disponible en este momento. Déjanos tu correo más abajo y te escribimos.', 'Le paiement en ligne n\'est pas disponible pour le moment. Laisse ton e-mail plus bas et on t\'écrit.'])}</p>`);
+    }; });
     document.querySelectorAll('.buy').forEach((b) => { b.onclick = async () => { if (!(await startCheckout(lang, b))) { openModal(lang); payUnavailable(); } }; });
     document.querySelectorAll('.ask').forEach((b) => { b.onclick = () => openModal(lang, 'ask'); });
   };

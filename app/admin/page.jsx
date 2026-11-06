@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Club', 'k-club'], pago: ['Payé CHF 39', 'k-pay'] };
+const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Club', 'k-club'], pago: ['Payé CHF 39', 'k-pay'], club_pago: ['Membre Club 9.99', 'k-member'] };
 const STATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
 const fmt = (iso) => new Date(iso).toLocaleString('fr-CH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 const wa = (p) => `https://wa.me/${String(p).replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
@@ -40,6 +40,7 @@ function checks(st) {
   if (st.lastTwintError) add('warn', `Dernier refus de TWINT par Stripe (${fmt(st.lastTwintError.at)}) : ${st.lastTwintError.value}`);
   if (st.lastCheckoutError) add('ko', `Dernière erreur de paiement (${fmt(st.lastCheckoutError.at)}) : ${st.lastCheckoutError.value}`);
   add(st.webhook ? 'ok' : 'warn', st.webhook ? 'Webhook Stripe configuré.' : 'Webhook Stripe absent (STRIPE_WEBHOOK_SECRET) : les paiements ne sont enregistrés que si le client revient sur le site.');
+  add(st.clubGroup ? 'ok' : 'warn', st.clubGroup ? 'Lien du groupe WhatsApp du Club configuré.' : 'Lien du groupe WhatsApp du Club absent (NEXT_PUBLIC_CLUB_WHATSAPP) : les nouveaux membres verront « accès par e-mail sous 24 h ».');
   add(st.cal ? 'ok' : 'warn', st.cal ? `Calendrier Cal.com : ${st.cal}` : 'Calendrier absent (NEXT_PUBLIC_CAL_LINK) : après paiement, le client verra « on te contacte ».');
   return c;
 }
@@ -168,13 +169,14 @@ export default function Admin() {
       <Status />
       <section className="adm-stats">
         <div><b>{fresh}</b><span>nouvelles</span></div>
-        <div className="adm-paid"><b>{count('pago')}</b><span>payés (à planifier)</span></div>
+        <div className="adm-member"><b>{count('club_pago')}</b><span>membres Club</span></div>
+        <div className="adm-paid"><b>{count('pago')}</b><span>consultations payées</span></div>
         <div><b>{count('llamada')}</b><span>rappels</span></div>
         <div><b>{count('pregunta')}</b><span>questions</span></div>
         <div className="adm-club"><b>{count('club')}</b><span>intéressés Club</span></div>
       </section>
       <section className="adm-filters">
-        <div className="adm-seg">{[['all', 'Tout'], ['pago', 'Payés'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['club', 'Club']].map(([k, v]) => (
+        <div className="adm-seg">{[['all', 'Tout'], ['club_pago', 'Membres'], ['pago', 'Payés'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['club', 'Club']].map(([k, v]) => (
           <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{v}</button>))}</div>
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filtrer par statut">
           <option value="open">À traiter</option><option value="all">Tous les statuts</option>

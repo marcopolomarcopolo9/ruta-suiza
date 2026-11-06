@@ -15,6 +15,7 @@ export async function GET(req) {
     stripeKey: key ? (key.startsWith('sk_live_') ? 'live' : key.startsWith('sk_test_') ? 'test' : key.startsWith('rk_') ? 'restricted' : key.startsWith('pk_') ? 'publishable' : 'unknown') : null,
     webhook: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
     cal: process.env.NEXT_PUBLIC_CAL_LINK || null,
+    clubGroup: Boolean(process.env.NEXT_PUBLIC_CLUB_WHATSAPP),
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || null,
     lastCheckoutError: await getDiag('checkout'),
     lastTwintError: await getDiag('twint'),

@@ -325,3 +325,21 @@ html{-webkit-tap-highlight-color:transparent}
 .lor{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0}
 .lor::before,.lor::after{content:"";flex:1;height:1px;background:var(--line)}
 .lor[hidden],.lpay[hidden],.paynote[hidden]{display:none!important}
+
+/* Club offer & welcome */
+.club-cta{display:grid;gap:6px;justify-items:center}
+.club-cta .btn{padding:15px 24px;font-size:17px;border-radius:14px}
+.club-offer{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:var(--surface);border:2px solid var(--accent);border-radius:20px;padding:24px 26px;margin:36px 0 0;box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 10%,transparent)}
+.club-offer h2{font-size:26px;margin:8px 0 4px}
+.club-offer .price{font-size:42px}
+.club-offer p{margin:4px 0 0}
+.club-offer-b{display:grid;gap:6px;justify-items:center;max-width:320px}
+.club-offer-b .btn{padding:15px 22px;font-size:16px;border-radius:14px;justify-content:center;width:100%}
+.plan .buy-club{width:100%;justify-content:center}
+.plan.feat .tag{justify-self:start}
+.plan .paynote{text-align:left}
+.wsteps{display:grid;gap:12px;margin:18px 0}
+.wstep{display:grid;gap:4px;background:var(--surface);border:1px solid var(--line);border-left:4px solid #25d366;border-radius:16px;padding:16px 18px;text-decoration:none}
+.wstep b{font-size:17px}
+.wstep span{color:var(--muted)}
+@media (max-width:700px){.club-offer{grid-template-columns:1fr}.club-offer-b{max-width:none}.club-hero .club-cta{justify-items:start}}

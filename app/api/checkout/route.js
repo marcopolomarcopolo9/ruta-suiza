@@ -1,4 +1,4 @@
-// Creates a Stripe Checkout session for the CHF 39 private consultation.
+// Creates a Stripe Checkout session: CHF 39 consultation (one-off) or Club CHF 9.99/month (subscription).
 // TWINT and cards appear automatically when enabled in Stripe → Settings → Payment methods.
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { allow, storeReady, setDiag } from '../../../lib/store';
@@ -13,18 +13,21 @@ export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const lang = body.lang === 'fr' ? 'fr' : 'es';
   const origin = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '');
-  const name = lang === 'es' ? 'Asesoría privada Ruta Suiza' : 'Accompagnement privé Ruta Suiza';
-  const line = process.env.STRIPE_PRICE_ID
-    ? { price: process.env.STRIPE_PRICE_ID, quantity: 1 }
-    : { price_data: { currency: 'chf', unit_amount: 3900, product_data: { name } }, quantity: 1 };
+  const club = body.product === 'club';
+  const name = club ? 'Club Ruta Suiza' : (lang === 'es' ? 'Asesoría privada Ruta Suiza' : 'Accompagnement privé Ruta Suiza');
+  const priceId = club ? process.env.STRIPE_CLUB_PRICE_ID : process.env.STRIPE_PRICE_ID;
+  const line = priceId
+    ? { price: priceId, quantity: 1 }
+    : { price_data: { currency: 'chf', unit_amount: club ? 999 : 3900, product_data: { name }, ...(club ? { recurring: { interval: 'month' } } : {}) }, quantity: 1 };
   const base = {
-    mode: 'payment',
+    mode: club ? 'subscription' : 'payment',
     line_items: [line],
     locale: lang,
     phone_number_collection: { enabled: true },
-    success_url: `${origin}/${lang}/reserva?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/${lang}/precios`,
-    metadata: { lang, product: 'asesoria' },
+    success_url: club ? `${origin}/${lang}/club/bienvenida?session_id={CHECKOUT_SESSION_ID}` : `${origin}/${lang}/reserva?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: club ? `${origin}/${lang}/club` : `${origin}/${lang}/precios`,
+    metadata: { lang, product: club ? 'club' : 'asesoria' },
+    ...(club ? { subscription_data: { metadata: { lang, product: 'club' } } } : {}),
   };
   // 1) ask explicitly for TWINT + card; 2) if Stripe refuses TWINT, fall back to the dashboard defaults
   try {
