@@ -380,3 +380,4 @@ html{-webkit-tap-highlight-color:transparent}
 .wstep.soon{border-left-color:var(--line);background:var(--bg)}
 .wa-alt{margin:0;font-size:13px;color:var(--muted)}
 .wa-alt a{color:#128c4b;font-weight:700}
+.wa-paid{margin:0;font-weight:600}.wa-paid a{color:#128c4b}

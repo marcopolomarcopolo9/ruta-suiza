@@ -73,6 +73,7 @@ function checks(st) {
   add(st.mail ? 'ok' : 'warn', st.mail ? 'E-mails automatiques (Resend) configurés.' : 'E-mails automatiques désactivés : ajoute RESEND_API_KEY (Resend) dans Vercel.');
   add(st.adminEmail ? 'ok' : 'warn', st.adminEmail ? 'Alertes par e-mail activées (ADMIN_EMAIL).' : 'Pas d’alerte par e-mail pour toi : ajoute ADMIN_EMAIL dans Vercel.');
   add(st.cron ? 'ok' : 'warn', st.cron ? 'Rappel automatique la veille du rendez-vous activé.' : 'Rappel de la veille désactivé : ajoute CRON_SECRET dans Vercel.');
+  add(st.whatsapp ? 'ok' : 'warn', st.whatsapp ? 'Numéro WhatsApp réservé aux clients configuré.' : 'Numéro WhatsApp absent : ajoute WHATSAPP_NUMBER dans Vercel (il ne s’affiche qu’aux clients qui ont payé).');
   add(st.clubGroup ? 'ok' : 'warn', st.clubGroup ? 'Lien du groupe WhatsApp du Club configuré.' : 'Lien du groupe WhatsApp du Club absent (NEXT_PUBLIC_CLUB_WHATSAPP).');
   return c;
 }

@@ -1,4 +1,5 @@
 import BookingPicker from '../../../components/BookingPicker';
+import { waHref, WHATSAPP_LABEL } from '../../../lib/private';
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { recordPayment } from '../../../lib/store';
 
@@ -9,8 +10,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Reserva', robots: { index: false, follow: false } };
 
 const TX = {
-  es: { ok: '¡Pago recibido, gracias!', okSub: 'Elige ahora el día y la hora de tu conversación privada con una persona del equipo.', bad: 'No encontramos tu pago', badSub: 'Si acabas de pagar, espera unos segundos y recarga la página. Si el problema continúa, escríbenos: te ayudamos enseguida.', back: 'Volver a los precios', open: 'Abrir el calendario en otra pestaña', noCal: 'Te contactamos en 24 h por WhatsApp o por correo para fijar tu cita.', receipt: 'Recibirás el recibo de pago por correo.' },
-  fr: { ok: 'Paiement reçu, merci !', okSub: 'Choisis maintenant le jour et l\'heure de ton échange privé avec une personne de l\'équipe.', bad: 'Nous ne trouvons pas ton paiement', badSub: 'Si tu viens de payer, attends quelques secondes et recharge la page. Si le problème continue, écris-nous : on t\'aide tout de suite.', back: 'Retour aux tarifs', open: 'Ouvrir le calendrier dans un nouvel onglet', noCal: 'On te contacte dans les 24 h par WhatsApp ou par e-mail pour fixer ton rendez-vous.', receipt: 'Tu recevras le reçu de paiement par e-mail.' },
+  es: { ok: '¡Pago recibido, gracias!', okSub: 'Elige ahora el día y la hora de tu conversación privada con una persona del equipo.', bad: 'No encontramos tu pago', badSub: 'Si acabas de pagar, espera unos segundos y recarga la página. Si el problema continúa, escríbenos: te ayudamos enseguida.', back: 'Volver a los precios', open: 'Abrir el calendario en otra pestaña', noCal: 'Te contactamos en 24 h por WhatsApp o por correo para fijar tu cita.', receipt: 'Recibirás el recibo de pago por correo.', wa: '¿Una pregunta antes de la cita? Escríbenos por WhatsApp:' },
+  fr: { ok: 'Paiement reçu, merci !', okSub: 'Choisis maintenant le jour et l\'heure de ton échange privé avec une personne de l\'équipe.', bad: 'Nous ne trouvons pas ton paiement', badSub: 'Si tu viens de payer, attends quelques secondes et recharge la page. Si le problème continue, écris-nous : on t\'aide tout de suite.', back: 'Retour aux tarifs', open: 'Ouvrir le calendrier dans un nouvel onglet', noCal: 'On te contacte dans les 24 h par WhatsApp ou par e-mail pour fixer ton rendez-vous.', receipt: 'Tu recevras le reçu de paiement par e-mail.', wa: 'Une question avant le rendez-vous ? Écris-nous sur WhatsApp :' },
 };
 
 export default async function Reserva({ params, searchParams }) {
@@ -45,6 +46,7 @@ export default async function Reserva({ params, searchParams }) {
         <h1>{t.ok}</h1>
         <p className="lead">{t.okSub}</p>
         <p className="muted">{t.receipt}</p>
+        {waHref() ? <p className="wa-paid">{t.wa} <a href={waHref()} target="_blank" rel="noopener">{WHATSAPP_LABEL}</a></p> : null}
       </div>
       <BookingPicker sessionId={preview ? 'preview' : session.id} lang={lang} />
     </section>

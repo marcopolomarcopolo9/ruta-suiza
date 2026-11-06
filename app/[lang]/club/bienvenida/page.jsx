@@ -1,6 +1,6 @@
 import { stripe, stripeReady } from '../../../../lib/stripe';
 import { recordPayment } from '../../../../lib/store';
-import { WHATSAPP } from '../../../../lib/links';
+import { WHATSAPP, WHATSAPP_LABEL } from '../../../../lib/private';
 
 import { cookies } from 'next/headers';
 import { isAdmin } from '../../../../lib/adminAuth';
@@ -37,7 +37,7 @@ export default async function Bienvenida({ params, searchParams }) {
       <h1>{t.hi}{first ? `, ${first}` : ''}!</h1>
       <p className="lead">{t.sub}</p>
       <div className="wsteps">
-        <a className="wstep" href={`https://wa.me/${wa.replace(/[^\d]/g, '')}`} target="_blank" rel="noopener"><b>1 · {t.letter}</b><span>{t.letterTxt} (+41 78 878 33 51)</span></a>
+        {wa ? <a className="wstep" href={`https://wa.me/${wa.replace(/[^\d]/g, '')}`} target="_blank" rel="noopener"><b>1 · {t.letter}</b><span>{t.letterTxt} ({WHATSAPP_LABEL})</span></a> : <div className="wstep"><b>1 · {t.letter}</b><span>{t.letterTxt}</span></div>}
         {group ? <a className="wstep" href={group} target="_blank" rel="noopener"><b>2 · {t.group}</b><span>{t.groupTxt}</span></a> : <div className="wstep soon"><b>2 · {t.groupSoon}</b><span>{t.groupSoonTxt}</span></div>}
       </div>
       <p className="muted">{t.receipt}</p>

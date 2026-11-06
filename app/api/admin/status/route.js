@@ -16,6 +16,7 @@ export async function GET(req) {
     webhook: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
     cal: process.env.NEXT_PUBLIC_CAL_LINK || null,
     clubGroup: Boolean(process.env.NEXT_PUBLIC_CLUB_WHATSAPP),
+    whatsapp: Boolean(process.env.WHATSAPP_NUMBER),
     mail: Boolean(process.env.RESEND_API_KEY),
     adminEmail: Boolean(process.env.ADMIN_EMAIL),
     cron: Boolean(process.env.CRON_SECRET),
