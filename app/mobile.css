@@ -370,3 +370,4 @@ html{-webkit-tap-highlight-color:transparent}
 .bk-hours button[aria-pressed="true"] .bk-lt{color:#fff;opacity:.9}
 .bk-local{margin:0;font-weight:600;color:var(--muted)}
 .bk-dur{margin:0}
+.club-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media (max-width:600px){.club-grid{grid-template-columns:1fr}}

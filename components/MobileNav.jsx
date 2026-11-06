@@ -25,8 +25,8 @@ const I = {
 };
 
 const TXT = {
-  es: { tabs: ['Inicio', 'Mi ruta', 'Países', 'Vivo aquí', 'Más'], more: 'Explorar más', news: ['Suiza News', 'Lo que cambia esta semana'], guias: ['Guías', 'Paso a paso, sin jerga'], precios: ['Precios', 'Gratis para empezar'], nos: ['Quiénes somos', 'Bilingües, desde la administración suiza'], club: ['Club Ruta Suiza', 'Tus cartas explicadas y buenos planes'], ask: 'Hablar con una persona', lang: 'Idioma', close: 'Cerrar', nav: 'Navegación principal' },
-  fr: { tabs: ['Accueil', 'Parcours', 'Pays', 'Installé', 'Plus'], more: 'Explorer plus', news: ['Suiza News', 'Ce qui change cette semaine'], guias: ['Guides', 'Pas à pas, sans jargon'], precios: ['Tarifs', 'Gratuit pour commencer'], nos: ['Qui sommes-nous', "Bilingues, de l'administration suisse"], club: ['Club Ruta Suiza', 'Tes courriers expliqués et bons plans'], ask: 'Parler à une personne', lang: 'Langue', close: 'Fermer', nav: 'Navigation principale' },
+  es: { tabs: ['Inicio', 'Mi ruta', 'Países', 'Vivo aquí', 'Más'], more: 'Explorar más', news: ['Suiza News', 'Lo que cambia esta semana'], guias: ['Guías', 'Paso a paso, sin jerga'], precios: ['Precios', 'Gratis para empezar'], nos: ['Quiénes somos', 'Bilingües, desde la administración suiza'], club: ['Club Ruta Suiza', 'Una persona te explica tus cartas'], ask: 'Hablar con una persona', lang: 'Idioma', close: 'Cerrar', nav: 'Navegación principal' },
+  fr: { tabs: ['Accueil', 'Parcours', 'Pays', 'Installé', 'Plus'], more: 'Explorer plus', news: ['Suiza News', 'Ce qui change cette semaine'], guias: ['Guides', 'Pas à pas, sans jargon'], precios: ['Tarifs', 'Gratuit pour commencer'], nos: ['Qui sommes-nous', "Bilingues, de l'administration suisse"], club: ['Club Ruta Suiza', 'Une personne t\'explique tes courriers'], ask: 'Parler à une personne', lang: 'Langue', close: 'Fermer', nav: 'Navigation principale' },
 };
 
 const buzz = () => { try { navigator.vibrate && navigator.vibrate(6); } catch (e) { /* ignore */ } };
