@@ -4,7 +4,6 @@ import '@fontsource/figtree/700.css';
 import '@fontsource/bricolage-grotesque/600.css';
 import '@fontsource/bricolage-grotesque/700.css';
 import '@fontsource/bricolage-grotesque/800.css';
-import '@fontsource/manrope/800.css';
 import '../globals.css';
 import '../extra.css';
 import '../mobile.css';
@@ -21,6 +20,8 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Ruta Suiza', template: '%s · Ruta Suiza' },
   applicationName: 'Ruta Suiza',
+  // Google Search Console: put the code of the HTML-tag method in GOOGLE_SITE_VERIFICATION (Vercel)
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
 };
 export const viewport = { themeColor: '#f2f4f7', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 

@@ -432,3 +432,10 @@ html{-webkit-tap-highlight-color:transparent}
   .buybar .btn{white-space:nowrap;padding:11px 14px;background:#16a34a}
   html.sheet-open .buybar{transform:translateY(160%)}
 }
+/* guides grid: 3 balanced columns + icons */
+.guides-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.guides-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.guides-grid{grid-template-columns:1fr}}
+.gcard{grid-template-columns:44px 1fr;column-gap:14px;align-items:start}
+.gcard .gico{grid-row:span 2;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.gcard h3,.gcard p{grid-column:2}
