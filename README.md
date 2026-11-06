@@ -16,7 +16,7 @@ npm run build && npm start
 - `components/Header.jsx` : menu + bascule ES/FR.
 
 ## Variables d'environnement
-- `NEXT_PUBLIC_SITE_URL` : domaine final (par défaut `https://www.rutasuiza.ch`).
+- `NEXT_PUBLIC_SITE_URL` : domaine final (par défaut `https://www.rutasuiza.com`).
 
 ## Déployer sur Vercel
 1. Pousser ce dossier sur un repo GitHub.
