@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import * as site from '../lib/site';
-import { linkifyDom, hrefFor } from '../lib/links';
+import { linkifyDom, hrefFor, waLink } from '../lib/links';
 
 const { T, S } = site;
 
@@ -55,6 +55,7 @@ export function openModal(lang, kind) {
     <input name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
     <label class="check"><input type="checkbox" name="consent" required> <span>${T([`Acepto la <a href="${pv}">política de privacidad</a> y que me contacten para responderme.`, `J'accepte la <a href="${pv}">politique de confidentialité</a> et d'être contacté·e pour une réponse.`])}</span></label>
     <p class="lerr" id="lerr" hidden></p>
+    <p class="wa-alt">${T(['¿Prefieres WhatsApp?', 'Tu préfères WhatsApp ?'])} <a href="${waLink(ask ? T(['Hola, tengo una pregunta: ', 'Bonjour, j\'ai une question : ']) : T(['Hola, quisiera hablar con una persona del equipo.', 'Bonjour, je voudrais parler à une personne de l\'équipe.']))}" target="_blank" rel="noopener">${T(['Escríbenos al', 'Écris-nous au'])} +41 78 878 33 51</a></p>
     <div class="lbtns"><button class="btn ghost" type="button" id="mclose">${T(['Cancelar', 'Annuler'])}</button><button class="btn" type="submit">${ask ? T(['Enviar mi pregunta', 'Envoyer ma question']) : T(['Quiero que me llamen', 'Je veux être rappelé·e'])}</button></div>`;
   const pay = document.getElementById('mpay');
   if (pay) pay.onclick = async () => { if (!(await startCheckout(lang, pay))) payUnavailable(); };
