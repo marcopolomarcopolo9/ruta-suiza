@@ -2,6 +2,7 @@
 // TWINT and cards appear automatically when enabled in Stripe → Settings → Payment methods.
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { allow, storeReady, setDiag } from '../../../lib/store';
+import { logError } from '../../../lib/errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ export async function POST(req) {
     const s = await stripe('POST', 'checkout/sessions', base);
     return Response.json({ ok: true, url: s.url });
   } catch (e) {
-    console.error('checkout failed', e.message);
+    await logError('paiement', e);
     await setDiag('checkout', e.message);
     return Response.json({ ok: false, error: 'stripe_error' }, { status: 502 });
   }

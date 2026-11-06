@@ -26,7 +26,7 @@ function clientTime(b) {
   } catch (e) { return ''; }
 }
 const wa = (p) => `https://wa.me/${String(p || '').replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
-const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'] };
+const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'], club_baja: ['Fin d’abonnement', 'k-call'], pago_fallido: ['Paiement échoué', 'k-rdv'] };
 const LSTATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
 const CSTATUS = { member: ['Membre', 'b-member'], member_ending: ['Membre (résilie)', 'b-ending'], ex_member: ['Ancien membre', 'b-ex'], customer: ['Client', 'b-customer'], prospect: ['Prospect', 'b-prospect'] };
 const SSTATUS = { active: ['Actif', 'b-member'], trialing: ['Essai', 'b-member'], past_due: ['Paiement en retard', 'b-ending'], canceled: ['Résilié', 'b-ex'], unpaid: ['Impayé', 'b-ending'], incomplete: ['Incomplet', 'b-prospect'], incomplete_expired: ['Expiré', 'b-ex'] };
@@ -124,6 +124,7 @@ function Dashboard({ data, go, openClient, st }) {
     <>
       {bad > 0 && <button type="button" className="alert" onClick={() => go('settings')}>⚠️ {bad} problème{bad > 1 ? 's' : ''} de configuration à régler → voir Réglages</button>}
       {data.stripeError && <div className="alert">Stripe : {data.stripeError}</div>}
+      {data.recentErrors > 0 && <button type="button" className="alert" onClick={() => go('settings')}>🐞 {data.recentErrors} erreur{data.recentErrors > 1 ? 's' : ''} technique{data.recentErrors > 1 ? 's' : ''} ces dernières 24 h → voir Réglages</button>}
       <div className="quick"><span className="muted small">Aperçus client :</span><a className="ghost" href="/es/reserva?preview=1" target="_blank" rel="noopener">👀 Page après paiement 39.- (calendrier)</a><a className="ghost" href="/es/club/bienvenida?preview=1" target="_blank" rel="noopener">👀 Bienvenue Club</a></div>
       <section className="kpis">
         <div className="kpi"><span>Revenus ce mois</span><b>{CHF(month)}</b><small>mois dernier : {CHF(prev)}</small></div>
@@ -192,7 +193,7 @@ function Clients({ data, openClient }) {
   );
 }
 
-function ClientDrawer({ c, onClose, onNote }) {
+function ClientDrawer({ c, onClose, onNote, onDeleted }) {
   const [note, setNote] = useState(c.note || '');
   const [saved, setSaved] = useState(false);
   useEffect(() => { setNote(c.note || ''); setSaved(false); }, [c.key, c.note]);
@@ -232,6 +233,15 @@ function ClientDrawer({ c, onClose, onNote }) {
         <h3>Historique</h3>
         <ol className="timeline">{timeline.map((e, i) => (
           <li key={i}><span className="ti">{e.icon}</span><div><div>{e.txt}</div><small className="muted">{dt(e.t)}{e.link && <> · <a href={e.link} target="_blank" rel="noopener">voir dans Stripe ↗</a></>}</small></div></li>))}</ol>
+        <div className="danger-zone">
+          <b>Protection des données</b>
+          <p className="muted small">Si ce client te demande d’effacer ses données : supprime ici ses demandes, rendez-vous et ta note. Ses paiements restent dans Stripe (obligation comptable), tu peux y supprimer le client séparément.</p>
+          <button type="button" className="ghost danger-t" onClick={async () => {
+            if (!confirm(`Supprimer définitivement toutes les données de ${c.name || c.email || 'ce client'} enregistrées sur le site ?`)) return;
+            await fetch('/api/admin/client', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: c.key, email: c.email, phone: c.phone }) });
+            onDeleted();
+          }}>Supprimer toutes les données de ce client</button>
+        </div>
       </aside>
     </div>
   );
@@ -299,9 +309,10 @@ function Agenda({ onChanged }) {
   const [tpl, setTpl] = useState(null);
   const [showTpl, setShowTpl] = useState(false);
   const [sel, setSel] = useState(null);
-  const load = useCallback(() => fetch(`/api/admin/agenda?week=${week}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { setG(j); setTpl(j.template); }), [week]);
+  const load = useCallback(() => fetch(`/api/admin/agenda?week=${week}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { setG(j.ok === false ? { error: j.error || 'accès refusé' } : j); setTpl(j.template || null); }).catch(() => setG({ error: 'réseau' })), [week]);
   useEffect(() => { load(); }, [load]);
-  if (!g || !g.dates) return <section className="card"><p className="muted">Chargement de l’agenda…</p></section>;
+  if (g && g.error) return <section className="card"><p className="err">L’agenda n’a pas pu être chargé ({g.error}). Recharge la page.</p></section>;
+  if (!g || !Array.isArray(g.dates) || !Array.isArray(g.slots) || !g.today) return <section className="card"><p className="muted">Chargement de l’agenda…</p></section>;
   const toggle = async (date, min) => { await post('/api/admin/agenda', { action: 'toggle', date, min }); load(); };
   const cancel = async (b) => { if (!confirm(`Annuler le rendez-vous de ${b.name || b.email || 'ce client'} (${slotLabel(b.date, bMin(b))}) ? Pense à le prévenir.`)) return; await post('/api/admin/agenda', { action: 'cancel', id: b.id }); setSel(null); load(); onChanged(); };
   const saveTpl = async () => { await post('/api/admin/agenda', { action: 'template', template: tpl }); setShowTpl(false); load(); };
@@ -328,7 +339,7 @@ function Agenda({ onChanged }) {
               return (
                 <td key={k} className={`c-${state} ${isPast ? 'past' : ''}`}>
                   {state === 'booked'
-                    ? <button type="button" onClick={() => setSel(b)} title="Voir le rendez-vous">{b.test ? 'Test' : (b.name || b.email || 'Réservé').split(' ')[0]}</button>
+                    ? <button type="button" onClick={() => b && setSel(b)} title="Voir le rendez-vous">{!b ? 'Réservé' : b.test ? 'Test' : (b.name || b.email || 'Réservé').split(' ')[0]}</button>
                     : <button type="button" disabled={isPast} onClick={() => toggle(dd, h)} aria-label={`${dd} ${hm(h)} : ${state === 'open' ? 'libre, cliquer pour fermer' : 'fermé, cliquer pour ouvrir'}`}>{state === 'open' ? 'libre' : ''}</button>}
                 </td>);
             })}</tr>))}</tbody>
@@ -459,7 +470,7 @@ function NewsEditor({ init, meta, onDone }) {
       <div className="bi"><b>Photo</b><small className="muted">Choisis une photo de la bibliothèque, ou colle l’adresse (https://) d’une image libre de droits.</small>
         <div className="photos">
           <button type="button" aria-pressed={!n.img && !n.imgUrl} onClick={() => setN((x) => ({ ...x, img: '', imgUrl: '' }))} className="ph-none">Sans photo</button>
-          {meta.photos.map((k) => <button key={k} type="button" aria-pressed={n.img === k} onClick={() => setN((x) => ({ ...x, img: k, imgUrl: '' }))}><img src={`/news/${k}.jpg`} alt={k} /></button>)}
+          {meta.photos.map((k) => <button key={k} type="button" aria-pressed={n.img === k} onClick={() => setN((x) => ({ ...x, img: k, imgUrl: '' }))}><img src={`/news/${k}-400.jpg`} alt={k} loading="lazy" /></button>)}
         </div>
         <div className="bi-row"><input placeholder="https://… (image externe, facultatif)" value={n.imgUrl} onChange={(e) => setN((x) => ({ ...x, imgUrl: e.target.value, img: '' }))} /><input placeholder="Crédit photo (auteur, licence)" value={n.imgCredit} onChange={(e) => up('imgCredit')(e.target.value)} /></div>
       </div>
@@ -510,9 +521,25 @@ function NewsAdmin() {
 }
 
 /* ---------- settings ---------- */
+function ErrorsPanel() {
+  const [list, setList] = useState(null);
+  const load = useCallback(() => fetch('/api/admin/errors', { cache: 'no-store' }).then((r) => r.json()).then((j) => setList(j.errors || [])).catch(() => setList([])), []);
+  useEffect(() => { load(); }, [load]);
+  return (
+    <section className="card">
+      <header className="card-h"><h2>Erreurs récentes <small>{list ? list.length : ''}</small></h2>{list && list.length > 0 && <button type="button" className="ghost" onClick={async () => { await fetch('/api/admin/errors', { method: 'DELETE' }); load(); }}>Tout effacer</button>}</header>
+      {!list ? <p className="muted">Chargement…</p> : list.length ? (
+        <ul className="errs">{list.map((e, i) => (
+          <li key={i}><div><span className="badge k-rdv">{e.source}</span> <b>{e.message}</b></div><small className="muted">{dt(e.at)}{e.url ? ` · ${e.url}` : ''}</small>{e.stack && <details><summary className="small">Détails techniques</summary><pre>{e.stack}</pre></details>}</li>))}</ul>
+      ) : <Empty>Aucune erreur enregistrée 👍</Empty>}
+    </section>
+  );
+}
+
 function Settings({ st }) {
   return (
     <>
+      <ErrorsPanel />
       <section className="card"><header className="card-h"><h2>État de la configuration</h2></header><StatusList st={st} /></section>
       <section className="card"><header className="card-h"><h2>Aperçus (sans paiement)</h2></header>
         <p className="muted small">Voir exactement ce que voient tes clients après avoir payé. Une réservation faite en aperçu est marquée « test » : annule-la ensuite dans l’Agenda.</p>
@@ -525,7 +552,19 @@ function Settings({ st }) {
 /* ---------- shell ---------- */
 const NAV = [['dash', 'Tableau de bord', '📊'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['settings', 'Réglages', '⚙️']];
 
+function useErrorReporting() {
+  useEffect(() => {
+    let sent = 0;
+    const send = (message, stack) => { if (sent >= 5 || !message) return; sent += 1; try { fetch('/api/log-error', { method: 'POST', keepalive: true, body: JSON.stringify({ message: `[CMS] ${String(message).slice(0, 280)}`, stack: String(stack || '').slice(0, 800), url: location.href }) }); } catch (e) { /* ignore */ } };
+    const onErr = (e) => send(e.message, e.error?.stack);
+    const onRej = (e) => send(e.reason?.message || e.reason, e.reason?.stack);
+    window.addEventListener('error', onErr); window.addEventListener('unhandledrejection', onRej);
+    return () => { window.removeEventListener('error', onErr); window.removeEventListener('unhandledrejection', onRej); };
+  }, []);
+}
+
 export default function Admin() {
+  useErrorReporting();
   const [state, setState] = useState('loading');
   const [data, setData] = useState(null);
   const [sec, setSec] = useState('dash');
@@ -580,7 +619,7 @@ export default function Admin() {
         {sec === 'news' && <NewsAdmin />}
         {sec === 'settings' && <Settings st={st} />}
       </main>
-      {cur && <ClientDrawer c={cur} onClose={() => setClient(null)} onNote={saveNote} />}
+      {cur && <ClientDrawer c={cur} onClose={() => setClient(null)} onNote={saveNote} onDeleted={() => { setClient(null); load(); }} />}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 // Optionally also set LEAD_WEBHOOK_URL in Vercel (e.g. a Formspree endpoint https://formspree.io/f/xxxx,
 // a Make/Zapier webhook) to get an e-mail copy.
 import { storeReady, addLead, allow } from '../../../lib/store';
+import { logError } from '../../../lib/errors';
 
 export const runtime = 'nodejs';
 
@@ -46,7 +47,7 @@ export async function POST(req) {
 
   let stored = false, forwarded = false;
   if (storeReady()) {
-    try { await addLead(lead); stored = true; } catch (e) { console.error('lead store failed', e.message); }
+    try { await addLead(lead); stored = true; } catch (e) { await logError('formulaire', e); }
   }
   if (url) {
     const label = { pregunta: 'Pregunta gratis', llamada: 'Hablar con una persona', club: 'Club · lista de espera', contacto: 'Formulario de contacto' }[lead.kind];
@@ -59,7 +60,7 @@ export async function POST(req) {
       });
       if (!r.ok) throw new Error(`webhook ${r.status}`);
       forwarded = true;
-    } catch (e) { console.error('lead forward failed', e.message); }
+    } catch (e) { await logError('formulaire (copie e-mail)', e); }
   }
   if (!stored && !forwarded) return Response.json({ ok: false, error: 'save_failed' }, { status: 502 });
   return Response.json({ ok: true });

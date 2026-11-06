@@ -1,9 +1,10 @@
 // One call that feeds the whole admin: leads, bookings, Stripe payments and subscriptions, merged clients.
 import { NextResponse } from 'next/server';
 import { isAdmin } from '../../../../lib/adminAuth';
-import { storeReady, listLeads, getClientNotes } from '../../../../lib/store';
+import { storeReady, listLeads, getClientNotes, purgeOldData } from '../../../../lib/store';
 import { listBookings } from '../../../../lib/agenda';
 import { stripe, stripeReady } from '../../../../lib/stripe';
+import { listErrors } from '../../../../lib/errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,7 @@ async function stripeData() {
       refunded: c.amount_refunded / 100,
       currency: String(c.currency || 'chf').toUpperCase(),
       method: c.payment_method_details?.type || null,
-      product: c.invoice ? 'club' : c.amount === 3900 ? 'consultation' : 'autre',
+      product: c.amount === 3900 ? 'consultation' : (c.invoice || /subscription/i.test(c.description || '') || c.amount === 999) ? 'club' : 'autre',
       name: c.billing_details?.name || '',
       email: c.billing_details?.email || c.receipt_email || '',
       phone: c.billing_details?.phone || '',
@@ -56,7 +57,9 @@ async function stripeData() {
 export async function GET(req) {
   if (!isAdmin(req)) return NextResponse.json({ ok: false }, { status: 401 });
   if (!storeReady()) return NextResponse.json({ ok: false, error: 'no_store' }, { status: 503 });
-  const [leads, bookings, notes, st] = await Promise.all([listLeads(), listBookings(), getClientNotes(), stripeData()]);
+  await purgeOldData();
+  const [leads, bookings, notes, st, errors] = await Promise.all([listLeads(), listBookings(), getClientNotes(), stripeData(), listErrors()]);
+  const recentErrors = errors.filter((e) => Date.now() - Date.parse(e.at) < 24 * 3600 * 1000).length;
 
   // merge everything into clients
   const clients = new Map();
@@ -83,5 +86,5 @@ export async function GET(req) {
     return { ...c, first: c.first === Infinity ? null : c.first, paid, status, note: notes[c.key] || '' };
   }).sort((a, b) => b.last - a.last);
 
-  return NextResponse.json({ ok: true, leads, bookings, payments: st.payments, subs: st.subs, clients: list, stripeError: st.error, now: Date.now() }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ ok: true, leads, bookings, payments: st.payments, subs: st.subs, clients: list, stripeError: st.error, recentErrors, now: Date.now() }, { headers: { 'Cache-Control': 'no-store' } });
 }

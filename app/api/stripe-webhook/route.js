@@ -2,7 +2,10 @@
 // In Stripe → Developers → Webhooks, point to https://<domain>/api/stripe-webhook,
 // event checkout.session.completed, and put the signing secret in STRIPE_WEBHOOK_SECRET.
 import crypto from 'crypto';
-import { recordPayment } from '../../../lib/store';
+import { recordPayment, addLead } from '../../../lib/store';
+import { stripe } from '../../../lib/stripe';
+import { cmd } from '../../../lib/redis';
+import { logError } from '../../../lib/errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,8 +25,27 @@ export async function POST(req) {
   const payload = await req.text();
   if (!verify(payload, req.headers.get('stripe-signature'), secret)) return new Response('bad signature', { status: 400 });
   const event = JSON.parse(payload);
-  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
-    try { await recordPayment(event.data.object); } catch (e) { console.error('record payment failed', e.message); return new Response('retry', { status: 500 }); }
+  try {
+    // each event is handled once, even if Stripe sends it again
+    if ((await cmd('SET', `stripe:evt:${event.id}`, '1', 'NX', 'EX', 60 * 60 * 24 * 30)) !== 'OK') return Response.json({ received: true, duplicate: true });
+    const o = event.data.object;
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+      await recordPayment(o);
+    } else if (event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed') {
+      // who is it? fetch the customer to show a name and e-mail in the CMS
+      let c = {};
+      try { if (o.customer) c = await stripe('GET', `customers/${o.customer}`); } catch { /* keep empty */ }
+      const [first, ...rest] = String(c.name || '').trim().split(/\s+/);
+      const failed = event.type === 'invoice.payment_failed';
+      await addLead({
+        kind: failed ? 'pago_fallido' : 'club_baja', first: first || '', last: rest.join(' '), email: c.email || o.customer_email || '', phone: c.phone || '', country: '', lang: 'es', page: 'stripe', consent: true,
+        message: failed ? `Paiement échoué : ${((o.amount_due || 0) / 100).toFixed(2)} ${String(o.currency || '').toUpperCase()} · Stripe relancera automatiquement` : `Abonnement Club terminé (${o.id})`,
+      });
+    }
+  } catch (e) {
+    await logError('webhook Stripe', e);
+    try { await cmd('DEL', `stripe:evt:${event.id}`); } catch { /* ignore */ }
+    return new Response('retry', { status: 500 });
   }
   return Response.json({ received: true });
 }

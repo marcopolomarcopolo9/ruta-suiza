@@ -188,3 +188,7 @@ body.adm{background:#f5f6f8;color:#14233a;font-size:15px}
 .cal tr.half th{color:#c0c5cf;font-weight:500}
 .cal tr:not(.half) td{padding-top:4px}
 .tpl-h button{padding:4px 6px;font-size:11px}
+.errs{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.errs li{border:1px solid #eaecf0;border-radius:10px;padding:10px 12px;display:grid;gap:4px;font-size:14px}
+.errs pre{white-space:pre-wrap;font-size:11px;background:#f9fafb;padding:8px;border-radius:8px;margin:6px 0 0;max-height:200px;overflow:auto}
+.danger-zone{margin-top:12px;border-top:1px solid #eaecf0;padding-top:14px;display:grid;gap:6px;justify-items:start}.danger-zone p{margin:0}

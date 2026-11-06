@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { book, bookingForSession } from '../../../lib/agenda';
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { isAdmin } from '../../../lib/adminAuth';
+import { logError } from '../../../lib/errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,8 @@ export async function POST(req) {
     const c = s.customer_details || {};
     who = { sessionId: s.id, name: c.name || '', email: c.email || '', phone: c.phone || '' };
   }
-  const r = await book({ date, min, lang: b.lang === 'fr' ? 'fr' : 'es', tz: String(b.tz || '').slice(0, 60), ...who });
+  let r;
+  try { r = await book({ date, min, lang: b.lang === 'fr' ? 'fr' : 'es', tz: String(b.tz || '').slice(0, 60), ...who }); } catch (e) { await logError('réservation', e); return Response.json({ ok: false, error: 'server' }, { status: 500 }); }
   if (r.error) return Response.json({ ok: false, error: r.error }, { status: r.error === 'taken' ? 409 : 400 });
   return Response.json({ ok: true, booking: r.booking, already: Boolean(r.already) });
 }

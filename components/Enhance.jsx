@@ -135,8 +135,23 @@ function bindTool() {
   if (d) d.addEventListener('change', (e) => { S.dual = e.target.checked; site.renderResult(); });
 }
 
+// report visitors' JavaScript errors to the CMS (once per page load, max 5)
+let reporting = false;
+function reportErrors() {
+  if (reporting || typeof window === 'undefined') return;
+  reporting = true;
+  let sent = 0;
+  const send = (message, stack) => {
+    if (sent >= 5 || !message) return; sent += 1;
+    try { fetch('/api/log-error', { method: 'POST', keepalive: true, body: JSON.stringify({ message: String(message).slice(0, 300), stack: String(stack || '').slice(0, 800), url: location.href }) }); } catch (e) { /* ignore */ }
+  };
+  window.addEventListener('error', (e) => { if (e.filename && !e.filename.startsWith(location.origin)) return; send(e.message, e.error?.stack); });
+  window.addEventListener('unhandledrejection', (e) => send(e.reason?.message || e.reason, e.reason?.stack));
+}
+
 export default function Enhance({ lang, view, arg, extra }) {
   useEffect(() => {
+    reportErrors();
     site.setLang(lang);
     if (extra) site.setExtraNews(extra);
     const bindUnlock = bindUnlockFor(lang);
