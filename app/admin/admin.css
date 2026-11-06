@@ -184,3 +184,7 @@ body.adm{background:#f5f6f8;color:#14233a;font-size:15px}
 .okmsg{background:#ecfdf3;border:1px solid #abefc6;color:#067647;border-radius:12px;padding:12px 16px;font-weight:600}
 .okmsg a{margin-left:8px}
 @media (max-width:800px){.ed-grid,.bi-row{grid-template-columns:1fr}.side nav button{font-size:9px}}
+.cal td button{height:26px}
+.cal tr.half th{color:#c0c5cf;font-weight:500}
+.cal tr:not(.half) td{padding-top:4px}
+.tpl-h button{padding:4px 6px;font-size:11px}

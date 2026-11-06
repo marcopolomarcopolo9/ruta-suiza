@@ -21,7 +21,7 @@ export async function POST(req) {
   const g = guard(req); if (g) return g;
   const b = await req.json().catch(() => ({}));
   if (b.action === 'template') return NextResponse.json({ ok: true, template: await setTemplate(b.template || {}) });
-  if (b.action === 'toggle') return NextResponse.json({ ok: true, state: await toggleSlot(String(b.date), Number(b.hour)) });
+  if (b.action === 'toggle') return NextResponse.json({ ok: true, state: await toggleSlot(String(b.date), Number(b.min)) });
   if (b.action === 'cancel') return NextResponse.json({ ok: await cancelBooking(String(b.id)) });
   return NextResponse.json({ ok: false }, { status: 400 });
 }

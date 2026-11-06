@@ -7,7 +7,24 @@ const CHF = (n) => new Intl.NumberFormat('fr-CH', { style: 'currency', currency:
 const dt = (t) => (t ? new Date(t).toLocaleString('fr-CH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
 const d = (t) => (t ? new Date(t).toLocaleDateString('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
 const pad = (n) => String(n).padStart(2, '0');
-const slotLabel = (date, hour) => `${new Date(`${date}T12:00:00Z`).toLocaleDateString('fr-CH', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit' })} · ${pad(hour)}:00`;
+const hm = (min) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+const bMin = (b) => (b.min ?? (b.hour || 0) * 60);
+const slotLabel = (date, min) => `${new Date(`${date}T12:00:00Z`).toLocaleDateString('fr-CH', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit' })} · ${hm(min)}`;
+function tzOffset(tz, instant) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(instant).map((x) => [x.type, x.value]));
+  return (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - Math.floor(instant.getTime() / 60000) * 60000) / 60000;
+}
+/** Client's local time for a booking ("11:30 à Bogota"), or '' when the client is on Swiss time. */
+function clientTime(b) {
+  if (!b.tz || b.tz === 'Europe/Zurich') return '';
+  try {
+    const [y, m, d] = b.date.split('-').map(Number); const min = bMin(b);
+    const guess = Date.UTC(y, m - 1, d, Math.floor(min / 60), min % 60);
+    const inst = new Date(guess - tzOffset('Europe/Zurich', new Date(guess)) * 60000);
+    if (tzOffset(b.tz, inst) === tzOffset('Europe/Zurich', inst)) return '';
+    return `${inst.toLocaleTimeString('fr-CH', { timeZone: b.tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })} à ${b.tz.split('/').pop().replace(/_/g, ' ')}`;
+  } catch (e) { return ''; }
+}
 const wa = (p) => `https://wa.me/${String(p || '').replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
 const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'] };
 const LSTATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
@@ -100,7 +117,7 @@ function Dashboard({ data, go, openClient, st }) {
   const active = data.subs.filter((s) => ACTIVE.includes(s.status));
   const mrr = active.filter((s) => !s.cancelAtEnd).reduce((s, x) => s + x.amount, 0);
   const todayKey = new Date().toISOString().slice(0, 10);
-  const upcoming = data.bookings.filter((b) => b.date >= todayKey && !b.test).sort((a, b) => (a.date + pad(a.hour)).localeCompare(b.date + pad(b.hour)));
+  const upcoming = data.bookings.filter((b) => b.date >= todayKey && !b.test).sort((a, b) => (a.date + String(bMin(a)).padStart(4, '0')).localeCompare(b.date + String(bMin(b)).padStart(4, '0')));
   const fresh = data.leads.filter((l) => l.status === 'nuevo');
   const bad = st && !st.fail ? checks(st).filter((x) => x[0] === 'ko').length : 0;
   return (
@@ -111,14 +128,14 @@ function Dashboard({ data, go, openClient, st }) {
       <section className="kpis">
         <div className="kpi"><span>Revenus ce mois</span><b>{CHF(month)}</b><small>mois dernier : {CHF(prev)}</small></div>
         <div className="kpi"><span>Membres Club actifs</span><b>{active.length}</b><small>revenu mensuel récurrent : {CHF(mrr)}</small></div>
-        <div className="kpi"><span>Rendez-vous à venir</span><b>{upcoming.length}</b><small>{upcoming[0] ? `prochain : ${slotLabel(upcoming[0].date, upcoming[0].hour)}` : 'aucun'}</small></div>
+        <div className="kpi"><span>Rendez-vous à venir</span><b>{upcoming.length}</b><small>{upcoming[0] ? `prochain : ${slotLabel(upcoming[0].date, bMin(upcoming[0]))}` : 'aucun'}</small></div>
         <div className="kpi"><span>Demandes à traiter</span><b>{fresh.length}</b><small>{data.leads.length} au total</small></div>
       </section>
       <div className="grid2">
         <section className="card">
           <header className="card-h"><h2>Prochains rendez-vous</h2><button type="button" className="link" onClick={() => go('agenda')}>Agenda →</button></header>
           {upcoming.length ? <ul className="rows">{upcoming.slice(0, 6).map((b) => (
-            <li key={b.id}><b className="when">{slotLabel(b.date, b.hour)}</b><span>{b.name || b.email}</span>{b.phone && <a href={wa(b.phone)} target="_blank" rel="noopener" className="wa">WhatsApp</a>}</li>))}</ul> : <Empty>Aucun rendez-vous prévu.</Empty>}
+            <li key={b.id}><b className="when">{slotLabel(b.date, bMin(b))}</b><span>{b.name || b.email}{clientTime(b) && <small className="muted"> · client : {clientTime(b)}</small>}</span>{b.phone && <a href={wa(b.phone)} target="_blank" rel="noopener" className="wa">WhatsApp</a>}</li>))}</ul> : <Empty>Aucun rendez-vous prévu.</Empty>}
         </section>
         <section className="card">
           <header className="card-h"><h2>Derniers paiements</h2><button type="button" className="link" onClick={() => go('payments')}>Tout voir →</button></header>
@@ -183,7 +200,7 @@ function ClientDrawer({ c, onClose, onNote }) {
   const timeline = [
     ...c.payments.map((p) => ({ t: p.created, icon: '💳', txt: `${PRODUCT[p.product]} · ${CHF(p.amount)}${p.refunded ? ` (remboursé ${CHF(p.refunded)})` : ''}${p.method ? ` · ${METHOD[p.method] || p.method}` : ''}`, link: p.link })),
     ...c.subs.map((s) => ({ t: s.created, icon: '⭐', txt: `Abonnement Club ${CHF(s.amount)}/mois · ${(SSTATUS[s.status] || [s.status])[0]}${s.cancelAtEnd ? ' · résiliation à la fin de la période' : ''}`, link: s.link })),
-    ...c.bookings.map((b) => ({ t: Date.parse(b.createdAt), icon: '📅', txt: `Rendez-vous réservé pour le ${slotLabel(b.date, b.hour)}` })),
+    ...c.bookings.map((b) => ({ t: Date.parse(b.createdAt), icon: '📅', txt: `Rendez-vous réservé pour le ${slotLabel(b.date, bMin(b))} (heure suisse)${clientTime(b) ? ` · ${clientTime(b)}` : ''}` })),
     ...c.leads.map((l) => ({ t: Date.parse(l.createdAt), icon: '✉️', txt: `${(KIND[l.kind] || [l.kind])[0]}${l.message ? ` : « ${l.message} »` : ''}` })),
   ].sort((a, b) => b.t - a.t);
   const activeSub = c.subs.find((s) => ACTIVE.includes(s.status));
@@ -285,10 +302,10 @@ function Agenda({ onChanged }) {
   const load = useCallback(() => fetch(`/api/admin/agenda?week=${week}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { setG(j); setTpl(j.template); }), [week]);
   useEffect(() => { load(); }, [load]);
   if (!g || !g.dates) return <section className="card"><p className="muted">Chargement de l’agenda…</p></section>;
-  const toggle = async (date, hour) => { await post('/api/admin/agenda', { action: 'toggle', date, hour }); load(); };
-  const cancel = async (b) => { if (!confirm(`Annuler le rendez-vous de ${b.name || b.email || 'ce client'} (${slotLabel(b.date, b.hour)}) ? Pense à le prévenir.`)) return; await post('/api/admin/agenda', { action: 'cancel', id: b.id }); setSel(null); load(); onChanged(); };
+  const toggle = async (date, min) => { await post('/api/admin/agenda', { action: 'toggle', date, min }); load(); };
+  const cancel = async (b) => { if (!confirm(`Annuler le rendez-vous de ${b.name || b.email || 'ce client'} (${slotLabel(b.date, bMin(b))}) ? Pense à le prévenir.`)) return; await post('/api/admin/agenda', { action: 'cancel', id: b.id }); setSel(null); load(); onChanged(); };
   const saveTpl = async () => { await post('/api/admin/agenda', { action: 'template', template: tpl }); setShowTpl(false); load(); };
-  const past = (date, hour) => `${date}:${pad(hour)}` < `${g.today.date}:${pad(g.today.hour)}`;
+  const past = (date, min) => `${date}:${String(min).padStart(4, '0')}` < `${g.today.date}:${String(g.today.min).padStart(4, '0')}`;
   return (
     <>
       <section className="card">
@@ -302,17 +319,17 @@ function Agenda({ onChanged }) {
             <a className="ghost" href="/es/reserva?preview=1" target="_blank" rel="noopener">👀 Voir ce que voit le client</a>
           </div>
         </header>
-        <p className="muted small legend">Clique sur une case pour l’ouvrir ou la fermer ce jour-là. <span className="lg lg-open">Libre</span><span className="lg lg-closed">Fermé</span><span className="lg lg-booked">Réservé</span> Heure suisse, créneaux d’une heure.</p>
+        <p className="muted small legend">Clique sur une case pour l’ouvrir ou la fermer ce jour-là. <span className="lg lg-open">Libre</span><span className="lg lg-closed">Fermé</span><span className="lg lg-booked">Réservé</span> Heure suisse, créneaux de 30 minutes.</p>
         <div className="cal-wrap"><table className="cal">
           <thead><tr><th />{g.dates.map((dd) => <th key={dd} className={dd === g.today.date ? 'today' : ''}>{new Date(`${dd}T12:00:00Z`).toLocaleDateString('fr-CH', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit' })}</th>)}</tr></thead>
-          <tbody>{g.hours.map((h) => (
-            <tr key={h}><th>{pad(h)}:00</th>{g.dates.map((dd) => {
+          <tbody>{g.slots.map((h) => (
+            <tr key={h} className={h % 60 ? 'half' : ''}><th>{hm(h)}</th>{g.dates.map((dd) => {
               const k = `${dd}:${h}`; const state = g.cells[k]; const b = g.bookings[k]; const isPast = past(dd, h);
               return (
                 <td key={k} className={`c-${state} ${isPast ? 'past' : ''}`}>
                   {state === 'booked'
                     ? <button type="button" onClick={() => setSel(b)} title="Voir le rendez-vous">{b.test ? 'Test' : (b.name || b.email || 'Réservé').split(' ')[0]}</button>
-                    : <button type="button" disabled={isPast} onClick={() => toggle(dd, h)} aria-label={`${dd} ${h}h : ${state === 'open' ? 'libre, cliquer pour fermer' : 'fermé, cliquer pour ouvrir'}`}>{state === 'open' ? 'libre' : ''}</button>}
+                    : <button type="button" disabled={isPast} onClick={() => toggle(dd, h)} aria-label={`${dd} ${hm(h)} : ${state === 'open' ? 'libre, cliquer pour fermer' : 'fermé, cliquer pour ouvrir'}`}>{state === 'open' ? 'libre' : ''}</button>}
                 </td>);
             })}</tr>))}</tbody>
         </table></div>
@@ -320,11 +337,11 @@ function Agenda({ onChanged }) {
       {showTpl && tpl && (
         <section className="card">
           <header className="card-h"><h2>Mes horaires habituels</h2><button type="button" className="btn" onClick={saveTpl}>Enregistrer</button></header>
-          <p className="muted small">Coche les heures où tu es disponible chaque semaine. Tu peux ensuite ouvrir ou fermer un créneau précis dans la grille.</p>
+          <p className="muted small">Coche les créneaux de 30 minutes où tu es disponible chaque semaine (ex. 17:00, 17:30… 19:30 pour être libre de 17h à 20h). Tu peux ensuite ouvrir ou fermer un créneau précis dans la grille.</p>
           <div className="tpl">{[1, 2, 3, 4, 5, 6, 7].map((wd) => (
-            <div key={wd} className="tpl-row"><b>{WD[wd]}</b><div className="tpl-h">{g.hours.map((h) => {
+            <div key={wd} className="tpl-row"><b>{WD[wd]}</b><div className="tpl-h">{g.slots.map((h) => {
               const on = (tpl[wd] || []).includes(h);
-              return <button key={h} type="button" aria-pressed={on} onClick={() => setTpl({ ...tpl, [wd]: on ? tpl[wd].filter((x) => x !== h) : [...(tpl[wd] || []), h] })}>{pad(h)}h</button>;
+              return <button key={h} type="button" aria-pressed={on} onClick={() => setTpl({ ...tpl, [wd]: on ? tpl[wd].filter((x) => x !== h) : [...(tpl[wd] || []), h] })}>{hm(h)}</button>;
             })}</div></div>))}</div>
         </section>
       )}
@@ -332,8 +349,8 @@ function Agenda({ onChanged }) {
         <div className="drawer-bg" onClick={() => setSel(null)}>
           <aside className="drawer small-drawer" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="x" onClick={() => setSel(null)} aria-label="Fermer">×</button>
-            <h2>📅 {slotLabel(sel.date, sel.hour)}</h2>
-            <dl className="facts"><dt>Client</dt><dd>{sel.name || '—'}{sel.test ? ' (test)' : ''}</dd><dt>E-mail</dt><dd>{sel.email || '—'}</dd><dt>Téléphone</dt><dd>{sel.phone || '—'}</dd><dt>Réservé le</dt><dd>{dt(sel.createdAt)}</dd></dl>
+            <h2>📅 {slotLabel(sel.date, bMin(sel))}</h2>
+            <dl className="facts"><dt>Client</dt><dd>{sel.name || '—'}{sel.test ? ' (test)' : ''}</dd><dt>E-mail</dt><dd>{sel.email || '—'}</dd><dt>Téléphone</dt><dd>{sel.phone || '—'}</dd><dt>Heure du client</dt><dd>{clientTime(sel) || 'heure suisse'}</dd><dt>Durée</dt><dd>{sel.duration || 60} minutes</dd><dt>Réservé le</dt><dd>{dt(sel.createdAt)}</dd></dl>
             <div className="actions">
               {sel.phone && <a className="btn wa-btn" href={wa(sel.phone)} target="_blank" rel="noopener">WhatsApp</a>}
               {sel.email && <a className="btn ghost" href={`mailto:${sel.email}`}>E-mail</a>}

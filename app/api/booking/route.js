@@ -21,7 +21,7 @@ export async function GET(req) {
 export async function POST(req) {
   const b = await req.json().catch(() => ({}));
   const id = String(b.session_id || '');
-  const hour = Number(b.hour);
+  const min = Number(b.min);
   const date = String(b.date || '');
   let who;
   if (id === 'preview') {
@@ -33,7 +33,7 @@ export async function POST(req) {
     const c = s.customer_details || {};
     who = { sessionId: s.id, name: c.name || '', email: c.email || '', phone: c.phone || '' };
   }
-  const r = await book({ date, hour, lang: b.lang === 'fr' ? 'fr' : 'es', ...who });
+  const r = await book({ date, min, lang: b.lang === 'fr' ? 'fr' : 'es', tz: String(b.tz || '').slice(0, 60), ...who });
   if (r.error) return Response.json({ ok: false, error: r.error }, { status: r.error === 'taken' ? 409 : 400 });
   return Response.json({ ok: true, booking: r.booking, already: Boolean(r.already) });
 }
