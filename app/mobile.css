@@ -293,3 +293,27 @@ html{-webkit-tap-highlight-color:transparent}
 @media (max-width:900px){.club-grid{grid-template-columns:1fr 1fr}.club-join{grid-template-columns:1fr}}
 @media (max-width:600px){.club-grid,.club-price{grid-template-columns:1fr}.club-hero{text-align:left;justify-items:start}.club-join .lform .btn{justify-self:stretch;justify-content:center}}
 @media (max-width:760px){.c5 .sc-ico{background:linear-gradient(135deg,var(--accent),var(--sun))}}
+.club-mini{max-width:480px}
+
+/* ===== Blog & pillar ===== */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.bcard{display:grid;grid-template-rows:auto 1fr;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none;transition:transform .15s ease,border-color .2s ease}
+.bcard:hover{border-color:var(--ink)}
+.bcard:hover h3{text-decoration:underline}
+.bc-img{aspect-ratio:16/9;background:var(--line);overflow:hidden}
+.bc-img img{width:100%;height:100%;object-fit:cover;display:block}
+.bc-txt{padding:16px 18px 18px;display:grid;gap:6px;align-content:start}
+.bc-txt h3{font-size:19px;line-height:1.25}
+.bc-txt p{margin:0;color:var(--muted);font-size:15px}
+.bpillar{border:2px solid var(--accent)}
+.bloghead{margin-bottom:8px}
+.bfeature{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:16px;padding:16px 18px;margin:8px 0 22px;text-decoration:none}
+.bfeature b{font-size:17px;flex:1;min-width:220px}
+.bfeature span:last-child{font-weight:700;color:var(--accent)}
+.toc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:8px 0 18px}
+.toc b{display:block;margin-bottom:6px}
+.toc ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.pillar h2,.post h2{scroll-margin-top:90px}
+.pillar .faq,.post .faq{margin-top:34px}
+.fcols{grid-template-columns:1.4fr 1fr 1fr 1fr}@media (max-width:700px){.fcols{grid-template-columns:1fr 1fr}.fcols > div:first-child{grid-column:1/-1}}
+.club-join{margin-top:40px}.bgrid + .help,.bgrid + section,.article > .help{margin-top:28px}main > .view > .help:last-child{margin-bottom:8px}

@@ -46,22 +46,22 @@ function Lead({ l, onPatch, onDelete }) {
     <article className={`adm-lead st-${l.status}`}>
       <header>
         <span className={`adm-kind ${cls}`}>{label}</span>
-        <b>{l.first} {l.last}</b>
-        <span className="adm-muted">{l.country}{l.canton ? ` · ${l.canton}` : ''} · {l.lang?.toUpperCase()}</span>
+        <b>{l.first || l.last ? `${l.first} ${l.last}` : l.email}</b>
+        <span className="adm-muted">{[l.country, l.canton, l.lang?.toUpperCase()].filter(Boolean).join(' · ')}</span>
         <time className="adm-muted">{fmt(l.createdAt)}</time>
       </header>
       {l.message && <p className="adm-msg">{l.message}</p>}
       <div className="adm-contact">
-        <a href={wa(l.phone)} target="_blank" rel="noopener" className="adm-wa">WhatsApp {l.phone}</a>
+        {l.phone && <a href={wa(l.phone)} target="_blank" rel="noopener" className="adm-wa">WhatsApp {l.phone}</a>}
         <a href={`mailto:${l.email}`}>{l.email}</a>
-        <a href={`tel:${l.phone}`}>Appeler</a>
+        {l.phone && <a href={`tel:${l.phone}`}>Appeler</a>}
       </div>
       <div className="adm-actions">
         <select value={l.status} onChange={(e) => onPatch(l.id, { status: e.target.value })} aria-label="Statut">
           {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <textarea rows={1} placeholder="Note interne…" value={note} onChange={(e) => setNote(e.target.value)} onBlur={() => note !== (l.note || '') && onPatch(l.id, { note })} />
-        <button type="button" className="adm-del" onClick={() => confirm(`Supprimer la demande de ${l.first} ${l.last} ?`) && onDelete(l.id)}>Supprimer</button>
+        <button type="button" className="adm-del" onClick={() => confirm(`Supprimer la demande de ${l.first || l.email} ?`) && onDelete(l.id)}>Supprimer</button>
       </div>
       {l.page && <small className="adm-muted">Depuis {l.page}</small>}
     </article>
@@ -124,7 +124,7 @@ export default function Admin() {
         <div><b>{fresh}</b><span>nouvelles</span></div>
         <div><b>{count('llamada')}</b><span>rappels</span></div>
         <div><b>{count('pregunta')}</b><span>questions</span></div>
-        <div className="adm-club"><b>{count('club')}<small> / 100</small></b><span>places fondateur</span></div>
+        <div className="adm-club"><b>{count('club')}</b><span>intéressés Club</span></div>
       </section>
       <section className="adm-filters">
         <div className="adm-seg">{[['all', 'Tout'], ['llamada', 'Rappels'], ['pregunta', 'Questions'], ['club', 'Club']].map(([k, v]) => (

@@ -30,7 +30,8 @@ export async function POST(req) {
   };
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(lead.email);
   const phoneOk = /^[+()\d\s.-]{6,}$/.test(lead.phone);
-  if (!lead.first || !lead.last || !lead.country || !emailOk || !phoneOk || !lead.consent || (lead.kind === 'pregunta' && !lead.message)) {
+  const club = lead.kind === 'club';
+  if (!emailOk || !lead.consent || (!club && (!lead.first || !lead.last || !lead.country || !phoneOk)) || (lead.kind === 'pregunta' && !lead.message)) {
     return Response.json({ ok: false, error: 'invalid' }, { status: 422 });
   }
 
@@ -45,7 +46,7 @@ export async function POST(req) {
   }
   if (url) {
     const label = { pregunta: 'Pregunta gratis', llamada: 'Hablar con una persona', club: 'Club · lista de espera' }[lead.kind];
-    const subject = `${label} · ${lead.first} ${lead.last} (${lead.country}${lead.canton ? `, ${lead.canton}` : ''})`;
+    const subject = club ? `${label} · ${lead.email}` : `${label} · ${lead.first} ${lead.last} (${lead.country}${lead.canton ? `, ${lead.canton}` : ''})`;
     try {
       const r = await fetch(url, {
         method: 'POST',

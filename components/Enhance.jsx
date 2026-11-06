@@ -74,7 +74,7 @@ function bindClub(lang) {
       const r = await fetch('/api/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       if (!r.ok) throw new Error(String(r.status));
       f.hidden = true; ok.hidden = false;
-      ok.innerHTML = `<b>${T(['¡Bienvenido/a al Club, ', 'Bienvenue au Club, '])}${esc(data.first)}!</b><p>${T(['Tu plaza de miembro fundador está reservada. Te escribimos en cuanto abramos.', 'Ta place de membre fondateur est réservée. On t\'écrit dès l\'ouverture.'])}</p>`;
+      ok.innerHTML = `<b>${T(['¡Gracias!', 'Merci !'])}</b><p>${T(['Te avisaremos en cuanto abra el Club.', 'On te préviendra dès l\'ouverture du Club.'])}</p>`;
     } catch (x) {
       err.hidden = false;
       err.textContent = T(['No se pudo enviar. Inténtalo de nuevo en unos minutos.', "L'envoi n'a pas fonctionné. Réessaie dans quelques minutes."]);

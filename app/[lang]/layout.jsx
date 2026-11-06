@@ -33,6 +33,10 @@ export default function LangLayout({ children, params }) {
   return (
     <html lang={lang}>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
+          { '@context': 'https://schema.org', '@type': 'Organization', name: 'Ruta Suiza', url: SITE_URL, logo: `${SITE_URL}/icon.svg`, areaServed: 'CH', knowsLanguage: ['es', 'fr'] },
+          { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Ruta Suiza', url: `${SITE_URL}/${lang}`, inLanguage: lang },
+        ]) }} />
         <a className="skip" href="#main">{lang === 'es' ? 'Ir al contenido' : 'Aller au contenu'}</a>
         <Header lang={lang} nav={nav} menuLabel={menu} />
         <main className="wrap" id="main">{children}</main>
