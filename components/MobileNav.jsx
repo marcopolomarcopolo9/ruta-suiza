@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { switchLangPath } from '../lib/links';
-import { openModal } from './Enhance';
+import { openModal, startCheckout } from './Enhance';
 
 const ico = (d) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
@@ -56,6 +56,8 @@ function reveal(root, io) {
 export default function MobileNav({ lang }) {
   const pathname = usePathname() || `/${lang}`;
   const [open, setOpen] = useState(false);
+  const [bar, setBar] = useState(false);
+  const [barBusy, setBarBusy] = useState(false);
   const t = TXT[lang] || TXT.es;
   const L = `/${lang}`;
   const seg = pathname.split('/')[2] || '';
@@ -67,6 +69,14 @@ export default function MobileNav({ lang }) {
   ];
   let active = tabs.findIndex((x) => x.k === seg);
   if (active < 0) active = 4;
+
+  const showBar = seg === 'club' || seg === 'precios';
+  useEffect(() => {
+    if (!showBar) { setBar(false); return undefined; }
+    const on = () => setBar(window.scrollY > 520);
+    on(); window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, [showBar, pathname]);
 
   // close the sheet on navigation
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -108,6 +118,12 @@ export default function MobileNav({ lang }) {
   return (
     <>
       <div id="rs-progress" aria-hidden="true" />
+      {showBar && !pathname.includes('bienvenida') && (
+        <div className={`buybar ${bar ? 'on' : ''}`} aria-hidden={!bar}>
+          <span><b>Club Ruta Suiza · CHF 9.99</b>{lang === 'fr' ? 'par mois · sans engagement' : 'al mes · sin permanencia'}</span>
+          <button type="button" className="btn" disabled={barBusy} tabIndex={bar ? 0 : -1} onClick={async (e) => { setBarBusy(true); const ok = await startCheckout(lang, e.currentTarget, 'club'); if (!ok) { setBarBusy(false); window.location.href = `/${lang}/club#club-form`; } }}>{lang === 'fr' ? 'Rejoindre' : 'Unirme'}</button>
+        </div>
+      )}
       <nav className="tabbar" aria-label={t.nav} style={{ '--i': active }}>
         <span className="tb-pill" aria-hidden="true" />
         {tabs.map((x, i) => (
