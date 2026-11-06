@@ -11,24 +11,52 @@ function setHdr() {
   if (h) document.documentElement.style.setProperty('--hdr', `${h.offsetHeight}px`);
 }
 
+const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
 export function openModal(lang, kind) {
   const ask = kind === 'ask';
   const modal = document.getElementById('modal');
   if (!modal) return;
-  document.getElementById('mtitle').textContent = ask ? T(['Tu primera pregunta es gratis', 'Ta première question est gratuite']) : T(['Pasa a la acción', "Passe à l'action"]);
+  site.setLang(lang);
+  document.getElementById('mtitle').textContent = ask ? T(['Tu primera pregunta es gratis', 'Ta première question est gratuite']) : T(['Habla con una persona del equipo', "Parle à une personne de l'équipe"]);
   document.getElementById('msub').textContent = ask
-    ? T(['Escríbenos por WhatsApp en español o francés: una persona del equipo te responde en 24–48 h.', "Écris-nous sur WhatsApp en espagnol ou en français : une personne de l'équipe te répond en 24–48 h."])
-    : T(['Asesoría privada: CHF 39, pago único, con garantía. Eliges tu horario y una persona del equipo te llama.', "Accompagnement privé : CHF 39, paiement unique, avec garantie. Tu choisis ton créneau et une personne de l'équipe t'appelle."]);
-  const cg = hrefFor('condiciones', lang), pv = hrefFor('privacidad', lang);
-  document.getElementById('mnote').innerHTML = ask
-    ? T(['El enlace de WhatsApp se activará con el número profesional.', 'Le lien WhatsApp sera activé avec le numéro professionnel.'])
-    : T([`Al continuar aceptas las <a href="${cg}">condiciones generales</a> y la <a href="${pv}">política de privacidad</a>. El pago en línea se activará pronto.`, `En continuant, tu acceptes les <a href="${cg}">conditions générales</a> et la <a href="${pv}">politique de confidentialité</a>. Le paiement en ligne sera bientôt activé.`]);
-  document.getElementById('mclose').textContent = T(['Seguir mirando', 'Continuer à explorer']);
-  const go = document.getElementById('mgo');
-  go.textContent = T(['Ver los planes', 'Voir les offres']);
-  go.setAttribute('href', hrefFor('precios', lang));
+    ? T(['Déjanos tus datos y tu pregunta: una persona del equipo te responde en 24–48 h, en español o en francés.', "Laisse-nous tes coordonnées et ta question : une personne de l'équipe te répond en 24–48 h, en espagnol ou en français."])
+    : T(['Déjanos tus datos y te llamamos para ver tu caso. Asesoría privada: CHF 39, pago único, con garantía.', "Laisse-nous tes coordonnées et on t'appelle pour voir ton cas. Accompagnement privé : CHF 39, paiement unique, avec garantie."]);
+  const pv = hrefFor('privacidad', lang);
+  const countries = site.ORDER.map((k) => T(site.C[k].n));
+  const f = document.getElementById('mform');
+  const ok = document.getElementById('mok');
+  ok.hidden = true; f.hidden = false;
+  f.innerHTML = `
+    <div class="lrow"><label>${T(['Nombre', 'Prénom'])}<input name="first" required autocomplete="given-name"></label>
+    <label>${T(['Apellido', 'Nom'])}<input name="last" required autocomplete="family-name"></label></div>
+    <label>${T(['Teléfono (WhatsApp)', 'Téléphone (WhatsApp)'])}<input name="phone" type="tel" required autocomplete="tel" placeholder="+41 79 123 45 67"></label>
+    <label>${T(['Correo electrónico', 'E-mail'])}<input name="email" type="email" required autocomplete="email"></label>
+    <label>${T(['País de origen', "Pays d'origine"])}<select name="country" required><option value="">${T(['Elige tu país', 'Choisis ton pays'])}</option>${countries.map((c) => `<option>${esc(c)}</option>`).join('')}<option>${T(['Otro', 'Autre'])}</option></select></label>
+    <label>${ask ? T(['Tu pregunta', 'Ta question']) : T(['Tu situación en pocas palabras (opcional)', 'Ta situation en quelques mots (facultatif)'])}<textarea name="message" rows="3" ${ask ? 'required' : ''}></textarea></label>
+    <input name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+    <label class="check"><input type="checkbox" name="consent" required> <span>${T([`Acepto la <a href="${pv}">política de privacidad</a> y que me contacten para responderme.`, `J'accepte la <a href="${pv}">politique de confidentialité</a> et d'être contacté·e pour une réponse.`])}</span></label>
+    <p class="lerr" id="lerr" hidden></p>
+    <div class="lbtns"><button class="btn ghost" type="button" id="mclose">${T(['Cancelar', 'Annuler'])}</button><button class="btn" type="submit">${ask ? T(['Enviar mi pregunta', 'Envoyer ma question']) : T(['Quiero que me llamen', 'Je veux être rappelé·e'])}</button></div>`;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('lerr');
+    if (!f.checkValidity()) { f.reportValidity(); return; }
+    const data = Object.fromEntries(new FormData(f).entries());
+    data.kind = ask ? 'pregunta' : 'llamada'; data.lang = lang; data.page = location.pathname;
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true; err.hidden = true;
+    try {
+      const r = await fetch('/api/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!r.ok) throw new Error(String(r.status));
+      f.hidden = true; ok.hidden = false;
+      ok.innerHTML = `<b>${T(['¡Gracias, ', 'Merci, '])}${esc(data.first)}!</b><p>${T(['Hemos recibido tu mensaje. Te contactamos en 24–48 h por WhatsApp o por correo.', "Nous avons bien reçu ton message. On te contacte dans les 24–48 h par WhatsApp ou par e-mail."])}</p><button class="btn" type="button" id="mclose">${T(['Cerrar', 'Fermer'])}</button>`;
+    } catch (x) {
+      err.hidden = false;
+      err.textContent = T(['No se pudo enviar. Inténtalo de nuevo en unos minutos.', "L'envoi n'a pas fonctionné. Réessaie dans quelques minutes."]);
+    } finally { btn.disabled = false; }
+  };
   modal.dataset.open = 'true';
-  document.getElementById('mclose').focus();
+  setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
 function bindUnlockFor(lang) {
@@ -125,7 +153,7 @@ export default function Enhance({ lang, view, arg }) {
 
     const modal = document.getElementById('modal');
     const close = () => { if (modal) modal.dataset.open = 'false'; };
-    const onModal = (e) => { if (e.target === modal || e.target.closest('a') || e.target.id === 'mclose') close(); };
+    const onModal = (e) => { if (e.target === modal || e.target.closest('a') || e.target.id === 'mclose' || e.target.id === 'mx') close(); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     modal && modal.addEventListener('click', onModal);
     document.addEventListener('keydown', onKey);

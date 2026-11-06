@@ -40,13 +40,11 @@ export default function LangLayout({ children, params }) {
         <footer><div className="wrap" id="foot" dangerouslySetInnerHTML={{ __html: foot }} /></footer>
         <div className="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
           <div className="mbox">
+            <button className="mx" id="mx" type="button" aria-label={lang === 'es' ? 'Cerrar' : 'Fermer'}>×</button>
             <h2 id="mtitle" style={{ fontSize: 24 }} />
             <p id="msub" style={{ margin: 0 }} className="muted" />
-            <div className="note" id="mnote" />
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-              <button className="btn ghost" id="mclose" type="button" />
-              <a className="btn" href={`/${lang}/precios`} id="mgo" />
-            </div>
+            <form className="lform" id="mform" noValidate />
+            <div className="lok" id="mok" hidden />
           </div>
         </div>
       </body>

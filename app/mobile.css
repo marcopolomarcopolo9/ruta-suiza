@@ -151,3 +151,120 @@ html{-webkit-tap-highlight-color:transparent}
 .about-facts span{font-size:15px;color:var(--muted)}
 .article:has(.about-facts) .help{margin-top:36px}
 @media (max-width:760px){.about-facts{grid-template-columns:1fr}.c4 .sc-ico{background:var(--ink)}}
+
+/* ===== Suiza News: news-app layout ===== */
+.nhead2{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.nhead2 h1{font-size:clamp(34px,5vw,52px);font-weight:800;letter-spacing:-1px}
+.nhead2 h1 span{color:var(--accent)}
+.nlive{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.nlive i{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:rs-pulse 1.6s ease-in-out infinite}
+@keyframes rs-pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 50%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+.nbar{position:sticky;top:var(--hdr,61px);z-index:4;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:10px -16px 18px;padding:8px 16px;
+  background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nbar::-webkit-scrollbar{display:none}
+.nbar button{flex:none;border:0;background:none;padding:8px 12px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.nbar button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.nlayout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:start}
+@media (max-width:980px){.nlayout{grid-template-columns:minmax(0,1fr)}}
+.nside{position:sticky;top:calc(var(--hdr,61px) + 70px);display:grid;gap:18px}
+@media (max-width:980px){.nside{position:static}}
+.nkick{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.nit-meta{font-size:13px;color:var(--muted)}
+.nph{display:grid;place-items:center;width:100%;height:100%;background:var(--accent);color:#fff;padding:10px;text-align:center}
+.nph b{font-family:var(--display);font-size:15px}
+.nph[data-cat="salud"]{background:#1f8a5b}.nph[data-cat="transporte"]{background:#2f6fde}.nph[data-cat="dinero"]{background:#b7791f}.nph[data-cat="vivienda"]{background:#6b46c1}
+
+/* lead story */
+.nlead{display:grid;gap:10px;text-decoration:none}
+.nl-img{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:var(--line)}
+.nl-img img,.nl-img .nph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.nlead:hover .nl-img img{transform:scale(1.03)}
+.nl-over{position:absolute;left:0;right:0;bottom:0;padding:60px 20px 18px;background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.35) 60%,transparent)}
+.nl-over .nkick{background:var(--accent);color:#fff;padding:3px 8px;border-radius:4px;margin-bottom:8px}
+.nl-over h2{color:#fff;font-size:clamp(24px,3.4vw,38px);font-weight:800;line-height:1.1;text-shadow:0 1px 12px rgba(0,0,0,.3)}
+.nlead p{margin:0;font-size:17px;color:var(--ink)}
+
+/* 30 seconds */
+.nbrief{margin:26px 0 8px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:16px;padding:16px 18px}
+.nbrief h2{font-size:17px;margin-bottom:8px}
+.nbrief ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.nbrief li::marker{color:var(--accent);font-weight:800}
+.nbrief a{text-decoration:none;font-weight:600}
+.nbrief a:hover{text-decoration:underline}
+
+/* feed */
+.nfeed{display:grid;margin-top:12px}
+.nitem{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:14px;align-items:start;padding:16px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.nit-txt{display:grid;gap:4px;align-content:start}
+.nitem h3{font-size:18px;line-height:1.25}
+.nitem:hover h3{text-decoration:underline}
+.nit-img{aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--line)}
+.nit-img img{width:100%;height:100%;object-fit:cover;display:block}
+.nwide{display:grid;gap:6px;padding:18px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.nw-img{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:var(--line);margin-bottom:4px}
+.nw-img img,.nw-img .nph{width:100%;height:100%;object-fit:cover;display:block}
+.nwide h3{font-size:22px;line-height:1.2}
+.nwide p{margin:0;color:var(--muted)}
+.nwide:hover h3{text-decoration:underline}
+
+/* agenda */
+.nagenda{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.nagenda h2{font-size:17px;margin-bottom:6px}
+.nag{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;font-weight:600;font-size:15px;line-height:1.3}
+.nag:first-of-type{border-top:0}
+.nag-d{display:grid;place-items:center;background:var(--accent);color:#fff;border-radius:10px;padding:5px 0;font-size:11px;font-weight:700;text-transform:uppercase;line-height:1.1}
+.nag-d b{font-family:var(--display);font-size:20px}
+.nag small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px}
+.ncred{font-size:13px;color:var(--muted);margin-top:28px}
+
+/* article */
+.narticle{max-width:720px}
+.narticle h1{font-size:clamp(28px,4.4vw,44px);font-weight:800;line-height:1.1;margin:6px 0 10px}
+.na-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-bottom:16px}
+.na-fig{margin:0 0 18px}
+.na-fig img,.na-fig .nph{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;display:grid}
+.na-fig figcaption{font-size:12px;color:var(--muted);margin-top:6px}
+.na-lead{font-size:19px;line-height:1.6;margin:0 0 20px}
+.na-you{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:16px;padding:18px;display:grid;gap:10px;justify-items:start}
+.na-you b{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.na-you p{margin:0;font-size:17px}
+.na-src{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:18px 0;font-size:14px}
+.na-src b{width:100%;font-size:13px;color:var(--muted)}
+.na-share{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;font-weight:700;text-decoration:none;padding:11px 18px;border-radius:12px;margin-bottom:24px}
+.na-more{margin-top:32px}
+.na-more h2{font-size:22px}
+
+@media (max-width:760px){
+  .nl-img{border-radius:0;margin:0 -16px}
+  .nl-over{padding:50px 16px 14px}
+  .nitem{grid-template-columns:minmax(0,1fr) 108px;gap:12px}
+  .nitem h3{font-size:17px}
+  .nw-img{border-radius:0;margin:0 -16px 4px}
+  .na-fig img,.na-fig .nph{border-radius:0;margin:0 -16px;width:calc(100% + 32px)}
+}
+.hhero.solo{grid-template-columns:1fr}.hhero.solo .lead{max-width:62ch}
+
+/* lead form in modal */
+.mbox{position:relative;max-height:calc(100dvh - 32px);overflow:auto}
+.mx{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:var(--bg);font-size:22px;line-height:1;cursor:pointer}
+#mtitle{padding-right:40px}
+.lform{display:grid;gap:10px}
+.lform label{display:grid;gap:4px;font-size:14px;font-weight:600}
+.lform input:not([type=checkbox]),.lform select,.lform textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.lform input:focus,.lform select:focus,.lform textarea:focus{outline:none;border-color:var(--ink)}
+.lform .check{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:13px;color:var(--muted)}
+.lform .check input{margin-top:2px;flex:none}
+.lrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.lerr{margin:0;color:var(--accent);font-size:14px;font-weight:600}
+.lbtns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+.lok{display:grid;gap:8px;justify-items:start}
+.lok b{font-family:var(--display);font-size:20px}
+.lok p{margin:0;color:var(--muted)}
+@media (max-width:760px){.mbox{max-height:92dvh}.lbtns .btn{flex:1;justify-content:center}}
+.nw-img .nph,.nl-img .nph,.na-fig .nph{display:grid!important}
+.lform[hidden],.lok[hidden],.lerr[hidden]{display:none!important}
+@media (max-width:760px){
+  .sheet{visibility:hidden;transition:transform .38s cubic-bezier(.2,.9,.25,1),visibility 0s linear .38s}
+  .sheet[data-open="true"]{visibility:visible;transition:transform .38s cubic-bezier(.2,.9,.25,1),visibility 0s}
+}
