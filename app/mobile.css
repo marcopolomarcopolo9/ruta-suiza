@@ -381,3 +381,19 @@ html{-webkit-tap-highlight-color:transparent}
 .wa-alt{margin:0;font-size:13px;color:var(--muted)}
 .wa-alt a{color:#128c4b;font-weight:700}
 .wa-paid{margin:0;font-weight:600}.wa-paid a{color:#128c4b}
+
+/* "Más" sheet: one clean grouped list, harmonious icons */
+@media (max-width:760px){
+  .sheet-grid{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .sheet-card{position:relative;background:none!important;border:0!important;border-radius:0!important;border-bottom:1px solid var(--line)!important;padding:12px 40px 12px 14px;grid-template-columns:40px 1fr;gap:12px}
+  .sheet-card:last-child{border-bottom:0!important}
+  .sheet-card::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:22px;color:#b8bfcc;line-height:1}
+  .sheet-card b{font-size:15.5px}
+  .sheet-card small{font-size:12.5px}
+  .sc-ico,.c1 .sc-ico,.c2 .sc-ico,.c3 .sc-ico,.c4 .sc-ico,.c5 .sc-ico{width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--accent) 9%,var(--surface))!important;color:var(--accent)!important}
+  .sc-ico svg{width:21px;height:21px;stroke-width:1.8}
+  .sheet-card.c5{background:color-mix(in srgb,var(--accent) 4%,var(--surface))!important}
+  .sheet-card.c5 .sc-ico{background:var(--accent)!important;color:#fff!important}
+  .sheet-card[aria-current="page"] b{color:var(--accent)}
+  .sheet[data-open="true"] .sheet-card{animation:none}
+}
