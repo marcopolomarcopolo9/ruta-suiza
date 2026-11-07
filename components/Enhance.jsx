@@ -149,9 +149,22 @@ function reportErrors() {
   window.addEventListener('unhandledrejection', (e) => send(e.reason?.message || e.reason, e.reason?.stack));
 }
 
+// anonymous page view (no cookie): one beacon per page; "v" marks the first page of a visit
+function trackView() {
+  try {
+    let first = false;
+    try { first = !sessionStorage.getItem('rs-v'); sessionStorage.setItem('rs-v', '1'); } catch (e) { first = true; }
+    const q = new URLSearchParams(location.search);
+    const body = JSON.stringify({ p: location.pathname, r: first ? document.referrer : '', u: first ? (q.get('utm_source') || q.get('ref') || '') : '', v: first ? 1 : 0 });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'text/plain' }));
+    else fetch('/api/track', { method: 'POST', body, keepalive: true });
+  } catch (e) { /* ignore */ }
+}
+
 export default function Enhance({ lang, view, arg, extra }) {
   useEffect(() => {
     reportErrors();
+    trackView();
     site.setLang(lang);
     if (extra) site.setExtraNews(extra);
     const bindUnlock = bindUnlockFor(lang);

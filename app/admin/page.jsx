@@ -524,6 +524,90 @@ function NewsAdmin() {
   );
 }
 
+/* ---------- statistics ---------- */
+const SRC = { instagram: ['Instagram', '📸'], tiktok: ['TikTok', '🎵'], google: ['Google', '🔎'], facebook: ['Facebook', '👍'], whatsapp: ['WhatsApp', '💬'], youtube: ['YouTube', '▶️'], bing: ['Bing', '🔎'], x: ['X / Twitter', '✖️'], linkedin: ['LinkedIn', '💼'], duckduckgo: ['DuckDuckGo', '🦆'], ia: ['Assistants IA', '🤖'], direct: ['Accès direct', '🔗'] };
+const DEV = { mobile: ['Mobile', '📱'], ordinateur: ['Ordinateur', '💻'], tablette: ['Tablette', '📲'] };
+const flag = (cc) => (/^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0))) : '🌐');
+let regionNames = null;
+const countryName = (cc) => { try { regionNames = regionNames || new Intl.DisplayNames(['fr'], { type: 'region' }); return /^[A-Z]{2}$/.test(cc) ? regionNames.of(cc) : 'Inconnu'; } catch (e) { return cc; } };
+const dayLabel = (d, opts) => new Date(`${d}T12:00:00Z`).toLocaleDateString('fr-CH', { timeZone: 'UTC', ...opts });
+const nf = (n) => new Intl.NumberFormat('fr-CH').format(n || 0);
+
+function BarList({ title, rows, label, empty }) {
+  const total = rows.reduce((s, r) => s + r[1], 0);
+  const max = rows.length ? rows[0][1] : 0;
+  return (
+    <section className="card">
+      <header className="card-h"><h2>{title}</h2></header>
+      {rows.length ? (
+        <ul className="barlist">{rows.map(([k, v]) => (
+          <li key={k}>
+            <span className="bl-bar" style={{ width: `${Math.max(2, (v / max) * 100)}%` }} aria-hidden="true" />
+            <span className="bl-label">{label(k)}</span>
+            <span className="bl-val">{nf(v)}<small> · {Math.round((v / total) * 100)} %</small></span>
+          </li>))}</ul>
+      ) : <Empty>{empty || 'Pas encore de données.'}</Empty>}
+    </section>
+  );
+}
+
+function DailyChart({ series }) {
+  const [hover, setHover] = useState(null);
+  const max = Math.max(1, ...series.map((d) => d.uv));
+  const step = series.length > 31 ? 14 : series.length > 14 ? 7 : 1;
+  const cur = hover !== null ? series[hover] : null;
+  return (
+    <section className="card">
+      <header className="card-h"><h2>Visiteurs par jour</h2>
+        <div className="chart-tip" aria-live="polite">{cur ? <><b>{dayLabel(cur.date, { weekday: 'short', day: 'numeric', month: 'short' })}</b> · {nf(cur.uv)} visiteurs · {nf(cur.visits)} visites · {nf(cur.pv)} pages vues</> : <span className="muted small">Survole une barre pour le détail</span>}</div>
+      </header>
+      <div className="chart" role="img" aria-label={`Visiteurs par jour, maximum ${max}`} onMouseLeave={() => setHover(null)}>
+        <div className="chart-grid" aria-hidden="true"><span>{nf(max)}</span><span>{nf(Math.round(max / 2))}</span><span>0</span></div>
+        <div className="chart-bars">{series.map((d, i) => (
+          <button key={d.date} type="button" className={`cb ${hover === i ? 'on' : ''}`} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onClick={() => setHover(i)} aria-label={`${d.date} : ${d.uv} visiteurs`}>
+            <span style={{ height: `${(d.uv / max) * 100}%` }} />
+          </button>))}</div>
+      </div>
+      <div className="chart-x" aria-hidden="true">{series.map((d, i) => <span key={d.date}>{i % step === 0 || i === series.length - 1 ? dayLabel(d.date, { day: 'numeric', month: 'numeric' }) : ''}</span>)}</div>
+      <details className="chart-table"><summary className="small">Voir le tableau</summary>
+        <table className="table"><thead><tr><th>Jour</th><th className="num">Visiteurs</th><th className="num">Visites</th><th className="num">Pages vues</th></tr></thead>
+          <tbody>{[...series].reverse().map((d) => <tr key={d.date}><td className="small">{dayLabel(d.date, { weekday: 'short', day: '2-digit', month: '2-digit' })}</td><td className="num">{nf(d.uv)}</td><td className="num">{nf(d.visits)}</td><td className="num">{nf(d.pv)}</td></tr>)}</tbody></table>
+      </details>
+    </section>
+  );
+}
+
+function Stats() {
+  const [days, setDays] = useState(30);
+  const [st, setSt] = useState(null);
+  useEffect(() => { setSt(null); fetch(`/api/admin/stats?days=${days}`, { cache: 'no-store' }).then((r) => r.json()).then(setSt).catch(() => setSt({ ok: false })); }, [days]);
+  return (
+    <>
+      <div className="toolbar"><div className="seg">{[[1, 'Aujourd’hui'], [7, '7 jours'], [30, '30 jours'], [90, '90 jours']].map(([k, v]) => <button key={k} type="button" aria-pressed={days === k} onClick={() => setDays(k)}>{v}</button>)}</div>
+        <span className="muted small">Sans cookies · anonyme · conforme à la loi suisse sur les données</span></div>
+      {!st ? <section className="card"><p className="muted">Chargement…</p></section> : st.ok === false ? <section className="card"><p className="err">Statistiques indisponibles (base de données).</p></section> : (
+        <>
+          <section className="kpis">
+            <div className="kpi"><span>Visiteurs</span><b>{nf(st.totals.uv)}</b><small>personnes différentes par jour, additionnées</small></div>
+            <div className="kpi"><span>Visites</span><b>{nf(st.totals.visits)}</b><small>arrivées sur le site</small></div>
+            <div className="kpi"><span>Pages vues</span><b>{nf(st.totals.pv)}</b><small>{st.totals.visits ? `${(st.totals.pv / st.totals.visits).toFixed(1)} pages par visite` : '—'}</small></div>
+            <div className="kpi"><span>Mobile</span><b>{st.totals.visits ? Math.round(((st.devices.find((d) => d[0] === 'mobile') || [0, 0])[1] / st.totals.visits) * 100) : 0} %</b><small>des visites</small></div>
+          </section>
+          {days > 1 && <DailyChart series={st.series} />}
+          <div className="grid2">
+            <BarList title="D’où viennent-ils ?" rows={st.sources} label={(k) => { const x = SRC[k]; return x ? `${x[1]} ${x[0]}` : `🌐 ${k}`; }} />
+            <BarList title="Pays" rows={st.countries} label={(k) => `${flag(k)} ${countryName(k)}`} />
+            <BarList title="Villes" rows={st.cities} label={(k) => { const [c, cc] = k.split('|'); return `${flag(cc)} ${c}`; }} empty="Les villes apparaissent une fois le site en ligne (information fournie par Vercel)." />
+            <BarList title="Appareils" rows={st.devices} label={(k) => { const x = DEV[k] || [k, '']; return `${x[1]} ${x[0]}`; }} />
+          </div>
+          <BarList title="Pages les plus vues" rows={st.pages} label={(k) => <a href={k} target="_blank" rel="noopener">{k}</a>} />
+          <p className="muted small">Astuce : pour savoir précisément d’où viennent tes visiteurs, ajoute <code>?utm_source=instagram</code> (ou tiktok, whatsapp…) à la fin des liens que tu partages.</p>
+        </>
+      )}
+    </>
+  );
+}
+
 /* ---------- settings ---------- */
 function EmailPreviews() {
   const [lang, setLang] = useState('es');
@@ -575,7 +659,7 @@ function Settings({ st }) {
 }
 
 /* ---------- shell ---------- */
-const NAV = [['dash', 'Tableau de bord', '📊'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['settings', 'Réglages', '⚙️']];
+const NAV = [['dash', 'Tableau de bord', '📊'], ['stats', 'Statistiques', '📈'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['settings', 'Réglages', '⚙️']];
 
 function useErrorReporting() {
   useEffect(() => {
@@ -636,6 +720,7 @@ export default function Admin() {
           <div className="row-btns"><span className="muted small">Mis à jour à {new Date(data.now).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</span><button type="button" className="ghost" onClick={load}>Actualiser</button></div>
         </header>
         {sec === 'dash' && <Dashboard data={data} go={setSec} openClient={setClient} st={st} />}
+        {sec === 'stats' && <Stats />}
         {sec === 'clients' && <Clients data={data} openClient={setClient} />}
         {sec === 'payments' && <Payments data={data} />}
         {sec === 'members' && <Members data={data} />}
