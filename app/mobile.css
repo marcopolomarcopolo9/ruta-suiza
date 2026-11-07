@@ -452,3 +452,24 @@ html{-webkit-tap-highlight-color:transparent}
 .post .na-fig,.narticle .na-fig{max-width:760px}
 
 .post .tbl td:first-child{white-space:nowrap}
+
+/* Suiza News · "Al minuto" feed (20 minutes · Suisse) */
+.nlive-feed{margin:0 0 26px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px 10px}
+.nlv-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.nlv-head h2{font-size:19px;display:flex;align-items:center;gap:9px;margin:0}
+.nlv-head h2 i{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:rs-pulse 1.6s ease-in-out infinite}
+.nlv-head span{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.nlv-note{font-size:13px;color:var(--muted);margin:2px 0 6px}
+.nlive-feed ol{list-style:none;margin:0;padding:0}
+.nlive-feed li+li{border-top:1px solid var(--line)}
+.nlive-feed li a{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:12px 0;text-decoration:none;color:inherit}
+.nlive-feed li a:hover h3{text-decoration:underline}
+.nlv-txt{min-width:0}
+.nlv-meta{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.nlv-meta b{color:var(--accent);font-weight:700}
+.nlive-feed h3{font-size:16px;line-height:1.3;margin:0;font-weight:700}
+.nlv-img{flex:0 0 120px;height:80px;border-radius:12px;overflow:hidden;background:var(--line)}
+.nlv-img:empty{display:none}
+.nlv-img img{width:100%;height:100%;object-fit:cover;display:block}
+.nlv-src{font-size:12.5px;color:var(--muted);margin:6px 0 4px}
+@media (max-width:760px){.nlive-feed{padding:14px 14px 8px;border-radius:16px}.nlv-img{flex-basis:96px;height:68px}.nlive-feed h3{font-size:15px}}
