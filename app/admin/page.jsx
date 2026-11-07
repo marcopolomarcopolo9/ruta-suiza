@@ -255,15 +255,24 @@ function ClientDrawer({ c, onClose, onNote, onDeleted }) {
 }
 
 /* ---------- payments ---------- */
-function Payments({ data }) {
+function Payments({ data, onReset }) {
   const [f, setF] = useState('all');
+  const [busy, setBusy] = useState(false);
+  const reset = async () => {
+    if (!window.confirm('Remettre à zéro les paiements enregistrés dans le CMS ?\n\nCela efface les paiements, abonnements terminés et paiements échoués venus de Stripe (par exemple ceux de l’ancien compte). Les demandes et les rendez-vous de l’agenda restent. Rien n’est supprimé chez Stripe.')) return;
+    setBusy(true);
+    const r = await post('/api/admin/reset-payments', { confirm: 'RESET' }).then((x) => x.json()).catch(() => ({}));
+    setBusy(false);
+    window.alert(r.ok ? `C’est fait : ${r.deleted} entrée(s) effacée(s).` : 'Erreur : réessaie dans un instant.');
+    if (r.ok && onReset) onReset();
+  };
   const list = data.payments.filter((p) => f === 'all' || p.product === f);
   const total = list.reduce((s, p) => s + p.amount - p.refunded, 0);
   return (
     <section className="card">
       <header className="card-h"><h2>Paiements <small>{list.length} · {CHF(total)} net</small></h2>
         <button type="button" className="ghost" onClick={() => downloadCsv('paiements', [['Date', (p) => dt(p.created)], ['Client', (p) => p.name], ['E-mail', (p) => p.email], ['Produit', (p) => PRODUCT[p.product]], ['Montant', (p) => p.amount.toFixed(2)], ['Remboursé', (p) => p.refunded.toFixed(2)], ['Moyen', (p) => METHOD[p.method] || p.method], ['ID Stripe', (p) => p.id]], list)}>Exporter CSV</button></header>
-      <div className="toolbar"><div className="seg">{[['all', 'Tous'], ['club', 'Club'], ['consultation', 'Consultations'], ['autre', 'Autres']].map(([k, v]) => <button key={k} type="button" aria-pressed={f === k} onClick={() => setF(k)}>{v}</button>)}</div></div>
+      <div className="toolbar"><div className="seg">{[['all', 'Tous'], ['club', 'Club'], ['consultation', 'Consultations'], ['autre', 'Autres']].map(([k, v]) => <button key={k} type="button" aria-pressed={f === k} onClick={() => setF(k)}>{v}</button>)}</div><button type="button" className="ghost" disabled={busy} onClick={reset}>{busy ? 'Effacement…' : '🗑 Remettre à zéro'}</button></div>
       {list.length ? (
         <div className="table-wrap"><table className="table">
           <thead><tr><th>Date</th><th>Client</th><th>Produit</th><th>Moyen</th><th className="num">Montant</th><th /></tr></thead>
@@ -725,7 +734,7 @@ export default function Admin() {
         {sec === 'dash' && <Dashboard data={data} go={setSec} openClient={setClient} st={st} />}
         {sec === 'stats' && <Stats />}
         {sec === 'clients' && <Clients data={data} openClient={setClient} />}
-        {sec === 'payments' && <Payments data={data} />}
+        {sec === 'payments' && <Payments data={data} onReset={load} />}
         {sec === 'members' && <Members data={data} />}
         {sec === 'agenda' && <Agenda onChanged={load} />}
         {sec === 'leads' && <Leads data={data} setData={setData} />}

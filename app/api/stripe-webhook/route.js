@@ -38,7 +38,8 @@ export async function POST(req) {
     const o = event.data.object;
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       await recordPayment(o);
-    } else if (event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed') {
+    } else if ((event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed')
+      && (o.metadata?.product || o.parent?.subscription_details?.metadata?.product || o.subscription_details?.metadata?.product) === 'club') {
       // who is it? fetch the customer to show a name and e-mail in the CMS
       let c = {};
       try { if (o.customer) c = await stripe('GET', `customers/${o.customer}`); } catch { /* keep empty */ }
