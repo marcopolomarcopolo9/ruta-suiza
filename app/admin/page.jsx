@@ -58,6 +58,7 @@ function checks(st) {
   else add(st.stripeKey === 'live' ? 'ok' : 'warn', st.stripeKey === 'live' ? 'Clé Stripe réelle (live) reçue.' : 'Clé Stripe de TEST : les paiements sont fictifs (carte 4242 4242 4242 4242).');
   if (st.accountError) add('ko', `Stripe refuse la clé : ${st.accountError}`);
   if (st.account) {
+    add('ok', `Compte Stripe branché : ${st.account.name || 'sans nom'}${st.account.email ? ` · ${st.account.email}` : ''} (${st.account.id}). C’est dans CE compte que TWINT et le webhook doivent être réglés.`);
     add(st.account.chargesEnabled ? 'ok' : 'ko', st.account.chargesEnabled ? 'Ton compte Stripe peut encaisser.' : 'Ton compte Stripe ne peut pas encore encaisser : termine l’activation dans Stripe (infos de l’activité, identité, IBAN).');
     if (st.account.country !== 'CH') add('ko', `Ton compte Stripe est enregistré dans le pays « ${st.account.country} ». TWINT n’est proposé qu’aux comptes suisses (CH).`);
   }
@@ -69,7 +70,17 @@ function checks(st) {
   if (st.twintCheckError) add('warn', `Impossible de vérifier TWINT : ${st.twintCheckError}`);
   if (st.lastTwintError) add('warn', `Dernier refus de TWINT par Stripe (${dt(st.lastTwintError.at)}) : ${st.lastTwintError.value}`);
   if (st.lastCheckoutError) add('ko', `Dernière erreur de paiement (${dt(st.lastCheckoutError.at)}) : ${st.lastCheckoutError.value}`);
-  add(st.webhook ? 'ok' : 'warn', st.webhook ? 'Webhook Stripe configuré.' : 'Webhook Stripe absent (STRIPE_WEBHOOK_SECRET) : les paiements ne sont enregistrés que si le client revient sur le site.');
+  if (st.endpoint?.none) add('ko', 'Aucun webhook vers https://www.rutasuiza.com/api/stripe-webhook dans ce compte Stripe : Développeurs → Webhooks → Ajouter une destination.');
+  else if (st.endpoint) {
+    if (!st.endpoint.enabled) add('ko', `Le webhook ${st.endpoint.url} est désactivé dans Stripe : réactive-le.`);
+    else if (st.endpoint.missing.length) add('ko', `Webhook présent mais il manque ces événements : ${st.endpoint.missing.join(', ')}.`);
+    else add('ok', `Webhook présent dans ce compte Stripe (${st.endpoint.url}).`);
+  }
+  if (st.endpointError) add('warn', `Impossible de lire les webhooks Stripe : ${st.endpointError}`);
+  add(st.webhook ? 'ok' : 'ko', st.webhook ? 'Secret du webhook (STRIPE_WEBHOOK_SECRET) présent dans Vercel.' : 'Secret du webhook absent : copie le « whsec_… » du webhook Stripe dans STRIPE_WEBHOOK_SECRET (Vercel) puis redéploie.');
+  const wOk = st.webhookOk?.at || '', wBad = st.webhookBad?.at || '';
+  if (wBad && wBad > wOk) add('ko', `Stripe a envoyé un événement le ${dt(wBad)} mais le secret ne correspond pas : STRIPE_WEBHOOK_SECRET vient sûrement de l’ancien compte. Recopie le « whsec_… » du webhook du nouveau compte dans Vercel puis redéploie.`);
+  else if (wOk) add('ok', `Dernier événement Stripe bien reçu le ${dt(wOk)} (${st.webhookOk.value}).`);
   add(st.mail ? 'ok' : 'warn', st.mail ? 'E-mails automatiques (Resend) configurés.' : 'E-mails automatiques désactivés : ajoute RESEND_API_KEY (Resend) dans Vercel.');
   add(st.adminEmail ? 'ok' : 'warn', st.adminEmail ? 'Alertes par e-mail activées (ADMIN_EMAIL).' : 'Pas d’alerte par e-mail pour toi : ajoute ADMIN_EMAIL dans Vercel.');
   add(st.cron ? 'ok' : 'warn', st.cron ? 'Rappel automatique la veille du rendez-vous activé.' : 'Rappel de la veille désactivé : ajoute CRON_SECRET dans Vercel.');

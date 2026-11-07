@@ -2,7 +2,7 @@
 // In Stripe → Developers → Webhooks, point to https://<domain>/api/stripe-webhook,
 // event checkout.session.completed, and put the signing secret in STRIPE_WEBHOOK_SECRET.
 import crypto from 'crypto';
-import { recordPayment, addLead } from '../../../lib/store';
+import { recordPayment, addLead, setDiag } from '../../../lib/store';
 import { stripe } from '../../../lib/stripe';
 import { cmd } from '../../../lib/redis';
 import { logError } from '../../../lib/errors';
@@ -24,8 +24,14 @@ export async function POST(req) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) return new Response('not configured', { status: 503 });
   const payload = await req.text();
-  if (!verify(payload, req.headers.get('stripe-signature'), secret)) return new Response('bad signature', { status: 400 });
+  if (!verify(payload, req.headers.get('stripe-signature'), secret)) {
+    // usually the secret belongs to another Stripe account / endpoint
+    let acct = ''; try { acct = JSON.parse(payload).account || ''; } catch { /* ignore */ }
+    await setDiag('webhookBad', acct || 'signature');
+    return new Response('bad signature', { status: 400 });
+  }
   const event = JSON.parse(payload);
+  await setDiag('webhookOk', event.type);
   try {
     // each event is handled once, even if Stripe sends it again
     if ((await cmd('SET', `stripe:evt:${event.id}`, '1', 'NX', 'EX', 60 * 60 * 24 * 30)) !== 'OK') return Response.json({ received: true, duplicate: true });
