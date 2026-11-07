@@ -315,3 +315,5 @@ footer .wrap{display:grid;gap:20px}
 .cform input:focus,.cform select:focus,.cform textarea:focus{outline:none;border-color:var(--ink)}
 .cform .btn{justify-self:start;margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (min-width:761px) and (max-width:1240px){nav.main{gap:0}nav.main a{padding:7px 8px;font-size:14px}.bar{gap:10px}}
+@media (min-width:761px) and (max-width:1060px){nav.main a{padding:6px 6px;font-size:13px}}
