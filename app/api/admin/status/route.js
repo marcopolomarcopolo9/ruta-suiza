@@ -1,4 +1,4 @@
-// Configuration check for /admin: what is set, and what Stripe says about the account and TWINT.
+// Configuration check for /admin: what is set, and what Stripe says about the account and its webhook.
 import { NextResponse } from 'next/server';
 import { isAdmin } from '../../../../lib/adminAuth';
 import { storeReady, getDiag } from '../../../../lib/store';
@@ -22,7 +22,6 @@ export async function GET(req) {
     cron: Boolean(process.env.CRON_SECRET),
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || null,
     lastCheckoutError: await getDiag('checkout'),
-    lastTwintError: await getDiag('twint'),
     webhookOk: await getDiag('webhookOk'),
     webhookBad: await getDiag('webhookBad'),
   };
@@ -41,11 +40,6 @@ export async function GET(req) {
         ? { url: ep.url, enabled: ep.status === 'enabled', missing: ep.enabled_events.includes('*') ? [] : NEED.filter((e) => !ep.enabled_events.includes(e)) }
         : { none: true, others: (w.data || []).map((x) => x.url).slice(0, 3) };
     } catch (e) { out.endpointError = e.message; }
-    try {
-      const c = await stripe('GET', 'payment_method_configurations?limit=10');
-      const def = (c.data || []).find((x) => x.is_default) || (c.data || [])[0];
-      if (def) out.twint = { available: def.twint?.available ?? false, preference: def.twint?.display_preference?.value || null, card: def.card?.available ?? null };
-    } catch (e) { out.twintCheckError = e.message; }
   }
   return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store' } });
 }

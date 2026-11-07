@@ -1,5 +1,5 @@
 // Creates a Stripe Checkout session: CHF 39 consultation (one-off) or Club CHF 9.99/month (subscription).
-// TWINT and cards appear automatically when enabled in Stripe → Settings → Payment methods.
+// Card only (Apple Pay / Google Pay are included with cards).
 import { stripe, stripeReady } from '../../../lib/stripe';
 import { allow, storeReady, setDiag } from '../../../lib/store';
 import { logError } from '../../../lib/errors';
@@ -30,16 +30,8 @@ export async function POST(req) {
     metadata: { lang, product: club ? 'club' : 'asesoria' },
     ...(club ? { subscription_data: { metadata: { lang, product: 'club' } } } : {}),
   };
-  // 1) ask explicitly for TWINT + card; 2) if Stripe refuses TWINT, fall back to the dashboard defaults
   try {
-    const s = await stripe('POST', 'checkout/sessions', { ...base, payment_method_types: ['card', 'twint'] });
-    return Response.json({ ok: true, url: s.url });
-  } catch (e) {
-    console.error('checkout with twint failed', e.message);
-    await setDiag('twint', e.message);
-  }
-  try {
-    const s = await stripe('POST', 'checkout/sessions', base);
+    const s = await stripe('POST', 'checkout/sessions', { ...base, payment_method_types: ['card'] });
     return Response.json({ ok: true, url: s.url });
   } catch (e) {
     await logError('paiement', e);

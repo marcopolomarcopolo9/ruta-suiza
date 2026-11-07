@@ -45,7 +45,7 @@ export function openModal(lang, kind) {
   const f = document.getElementById('mform');
   const ok = document.getElementById('mok');
   ok.hidden = true; f.hidden = false;
-  f.innerHTML = `${ask ? '' : `<button type="button" class="btn lpay" id="mpay">${T(['Pagar CHF 39 y elegir mi cita', 'Payer CHF 39 et choisir mon rendez-vous'])}</button><small class="paynote">${T(['TWINT o tarjeta · pago seguro con Stripe', 'TWINT ou carte · paiement sécurisé par Stripe'])}</small><div class="lor"><span>${T(['o déjanos tus datos y te llamamos', 'ou laisse tes coordonnées et on t\'appelle'])}</span></div>`}
+  f.innerHTML = `${ask ? '' : `<button type="button" class="btn lpay" id="mpay">${T(['Pagar CHF 39 y elegir mi cita', 'Payer CHF 39 et choisir mon rendez-vous'])}</button><small class="paynote">${T(['Tarjeta, Apple Pay o Google Pay · pago seguro con Stripe', 'Carte, Apple Pay ou Google Pay · paiement sécurisé par Stripe'])}</small><div class="lor"><span>${T(['o déjanos tus datos y te llamamos', 'ou laisse tes coordonnées et on t\'appelle'])}</span></div>`}
     <div class="lrow"><label>${T(['Nombre', 'Prénom'])}<input name="first" required autocomplete="given-name"></label>
     <label>${T(['Apellido', 'Nom'])}<input name="last" required autocomplete="family-name"></label></div>
     <label>${T(['Teléfono (WhatsApp)', 'Téléphone (WhatsApp)'])}<input name="phone" type="tel" required autocomplete="tel" placeholder="+41 79 123 45 67"></label>

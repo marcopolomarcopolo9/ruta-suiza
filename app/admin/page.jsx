@@ -58,17 +58,9 @@ function checks(st) {
   else add(st.stripeKey === 'live' ? 'ok' : 'warn', st.stripeKey === 'live' ? 'Clé Stripe réelle (live) reçue.' : 'Clé Stripe de TEST : les paiements sont fictifs (carte 4242 4242 4242 4242).');
   if (st.accountError) add('ko', `Stripe refuse la clé : ${st.accountError}`);
   if (st.account) {
-    add('ok', `Compte Stripe branché : ${st.account.name || 'sans nom'}${st.account.email ? ` · ${st.account.email}` : ''} (${st.account.id}). C’est dans CE compte que TWINT et le webhook doivent être réglés.`);
+    add('ok', `Compte Stripe branché : ${st.account.name || 'sans nom'}${st.account.email ? ` · ${st.account.email}` : ''} (${st.account.id}). C’est dans CE compte que le webhook doit être réglé.`);
     add(st.account.chargesEnabled ? 'ok' : 'ko', st.account.chargesEnabled ? 'Ton compte Stripe peut encaisser.' : 'Ton compte Stripe ne peut pas encore encaisser : termine l’activation dans Stripe (infos de l’activité, identité, IBAN).');
-    if (st.account.country !== 'CH') add('ko', `Ton compte Stripe est enregistré dans le pays « ${st.account.country} ». TWINT n’est proposé qu’aux comptes suisses (CH).`);
   }
-  if (st.twint) {
-    if (!st.twint.available) add('ko', 'TWINT n’est pas disponible sur ton compte Stripe (compte non suisse ou activation pas terminée).');
-    else if (st.twint.preference !== 'on') add('ko', 'TWINT est désactivé : Stripe → ⚙️ Settings → Payment methods → TWINT → Turn on.');
-    else add('ok', 'TWINT est activé.');
-  }
-  if (st.twintCheckError) add('warn', `Impossible de vérifier TWINT : ${st.twintCheckError}`);
-  if (st.lastTwintError) add('warn', `Dernier refus de TWINT par Stripe (${dt(st.lastTwintError.at)}) : ${st.lastTwintError.value}`);
   if (st.lastCheckoutError) add('ko', `Dernière erreur de paiement (${dt(st.lastCheckoutError.at)}) : ${st.lastCheckoutError.value}`);
   if (st.endpoint?.none) add('ko', 'Aucun webhook vers https://www.rutasuiza.com/api/stripe-webhook dans ce compte Stripe : Développeurs → Webhooks → Ajouter une destination.');
   else if (st.endpoint) {
