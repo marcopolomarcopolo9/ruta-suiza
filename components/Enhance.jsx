@@ -223,6 +223,7 @@ export default function Enhance({ lang, view, arg, extra }) {
     }
     if (view === 'noticias') site.bindNews();
     if (view === 'blog') site.bindBlog();
+    if (view === 'herramienta') site.bindTool(arg);
     if (view === 'club') bindClub(lang);
     if (view === 'legal') site.bindContact();
     bindUnlock();

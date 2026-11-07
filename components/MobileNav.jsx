@@ -20,13 +20,14 @@ const I = {
   tag: ico(<><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.5" /></>),
   people: ico(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7" /><path d="M18 14a6.5 6.5 0 0 1 3.5 6" /></>),
   star: ico(<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />),
+  calc: ico(<><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7h7" /><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h.01M15.5 18h.01" /></>),
   chat: ico(<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z" />),
   x: ico(<path d="M6 6l12 12M18 6 6 18" />),
 };
 
 const TXT = {
-  es: { tabs: ['Inicio', 'Mi ruta', 'Países', 'Vivo aquí', 'Más'], more: 'Explorar más', news: ['Suiza News', 'Lo que cambia esta semana'], guias: ['Guías', 'Paso a paso, sin jerga'], precios: ['Precios', 'Gratis para empezar'], nos: ['Quiénes somos', 'Bilingües, desde la administración suiza'], club: ['Club Ruta Suiza', 'Una persona te explica tus cartas'], ask: 'Hablar con una persona', lang: 'Idioma', close: 'Cerrar', nav: 'Navegación principal' },
-  fr: { tabs: ['Accueil', 'Parcours', 'Pays', 'Installé', 'Plus'], more: 'Explorer plus', news: ['Suiza News', 'Ce qui change cette semaine'], guias: ['Guides', 'Pas à pas, sans jargon'], precios: ['Tarifs', 'Gratuit pour commencer'], nos: ['Qui sommes-nous', "Bilingues, de l'administration suisse"], club: ['Club Ruta Suiza', 'Une personne t\'explique tes courriers'], ask: 'Parler à une personne', lang: 'Langue', close: 'Fermer', nav: 'Navigation principale' },
+  es: { tabs: ['Inicio', 'Mi ruta', 'Países', 'Vivo aquí', 'Más'], more: 'Explorar más', news: ['Suiza News', 'Lo que cambia esta semana'], guias: ['Guías', 'Paso a paso, sin jerga'], precios: ['Precios', 'Gratis para empezar'], nos: ['Quiénes somos', 'Bilingües, desde la administración suiza'], tools: ['Herramientas', 'Presupuesto, seguro, plazos'], club: ['Club Ruta Suiza', 'Una persona te explica tus cartas'], ask: 'Hablar con una persona', lang: 'Idioma', close: 'Cerrar', nav: 'Navegación principal' },
+  fr: { tabs: ['Accueil', 'Parcours', 'Pays', 'Installé', 'Plus'], more: 'Explorer plus', news: ['Suiza News', 'Ce qui change cette semaine'], guias: ['Guides', 'Pas à pas, sans jargon'], precios: ['Tarifs', 'Gratuit pour commencer'], nos: ['Qui sommes-nous', "Bilingues, de l'administration suisse"], tools: ['Outils', 'Budget, assurance, délais'], club: ['Club Ruta Suiza', 'Une personne t\'explique tes courriers'], ask: 'Parler à une personne', lang: 'Langue', close: 'Fermer', nav: 'Navigation principale' },
 };
 
 const buzz = () => { try { navigator.vibrate && navigator.vibrate(6); } catch (e) { /* ignore */ } };
@@ -144,7 +145,7 @@ export default function MobileNav({ lang }) {
           <button type="button" className="sheet-x" onClick={() => setOpen(false)} aria-label={t.close}>{I.x}</button>
         </div>
         <div className="sheet-grid">
-          {[['club', I.star, t.club, 'c5'], ['noticias', I.news, t.news, 'c1'], ['guias', I.book, t.guias, 'c2'], ['precios', I.tag, t.precios, 'c3'], ['nosotros', I.people, t.nos, 'c4']].map(([k, icon, [title, sub], c]) => (
+          {[['club', I.star, t.club, 'c5'], ['noticias', I.news, t.news, 'c1'], ['guias', I.book, t.guias, 'c2'], ['precios', I.tag, t.precios, 'c3'], ['herramientas', I.calc, t.tools, 'c2'], ['nosotros', I.people, t.nos, 'c4']].map(([k, icon, [title, sub], c]) => (
             <Link key={k} href={`${L}/${k}`} className={`sheet-card ${c}`} aria-current={seg === k ? 'page' : undefined}>
               <span className="sc-ico">{icon}</span>
               <span><b>{title}</b><small>{sub}</small></span>
