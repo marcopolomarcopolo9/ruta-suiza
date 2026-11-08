@@ -26,7 +26,7 @@ function clientTime(b) {
   } catch (e) { return ''; }
 }
 const wa = (p) => `https://wa.me/${String(p || '').replace(/[^\d]/g, '').replace(/^0(?=7)/, '41')}`;
-const KIND = { llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'], club_baja: ['Fin d’abonnement', 'k-call'], pago_fallido: ['Paiement échoué', 'k-rdv'] };
+const KIND = { checklist: ['Checklist', 'k-club'], llamada: ['Rappel', 'k-call'], pregunta: ['Question', 'k-ask'], club: ['Intérêt Club', 'k-club'], pago: ['Consultation payée', 'k-pay'], club_pago: ['Membre Club', 'k-member'], rdv: ['Rendez-vous', 'k-rdv'], contacto: ['Contact', 'k-ask'], club_baja: ['Fin d’abonnement', 'k-call'], pago_fallido: ['Paiement échoué', 'k-rdv'] };
 const LSTATUS = { nuevo: 'Nouveau', contactado: 'Contacté', cerrado: 'Terminé' };
 const CSTATUS = { member: ['Membre', 'b-member'], member_ending: ['Membre (résilie)', 'b-ending'], ex_member: ['Ancien membre', 'b-ex'], customer: ['Client', 'b-customer'], prospect: ['Prospect', 'b-prospect'] };
 const SSTATUS = { active: ['Actif', 'b-member'], trialing: ['Essai', 'b-member'], past_due: ['Paiement en retard', 'b-ending'], canceled: ['Résilié', 'b-ex'], unpaid: ['Impayé', 'b-ending'], incomplete: ['Incomplet', 'b-prospect'], incomplete_expired: ['Expiré', 'b-ex'] };
@@ -314,6 +314,117 @@ function Members({ data }) {
         </table></div>
       ) : <Empty>Aucun membre dans cette liste.</Empty>}
     </section>
+  );
+}
+
+
+/* ---------- letters (free first letter + Club members) ---------- */
+const LKIND = { free: ['Gratuit', 'b-ex'], member: ['Membre', 'b-member'] };
+const draftFor = (l) => (l.lang === 'fr'
+  ? 'Ce que c\'est : \n\nCe que tu dois faire : \n\nAvant quand : \n\nSi tu ne fais rien : \n'
+  : 'Qué es: \n\nQué tienes que hacer: \n\nAntes de cuándo: \n\nSi no haces nada: \n');
+function LetterCard({ l, onSaved, onDelete }) {
+  const [reply, setReply] = useState(l.reply || draftFor(l));
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const src = `/api/admin/letters?file=${l.id}`;
+  const expired = Date.now() - new Date(l.createdAt).getTime() > 30 * 86400000;
+  const send = async () => {
+    if (!window.confirm(`Envoyer cette réponse par e-mail à ${l.email} ?`)) return;
+    setBusy(true); setMsg('');
+    const r = await post('/api/admin/letters', { action: 'reply', id: l.id, reply }).then((x) => x.json()).catch(() => ({}));
+    setBusy(false);
+    if (r.ok) { setMsg(r.mailed ? 'Réponse envoyée ✓' : 'Réponse enregistrée (e-mail non configuré)'); onSaved(r.letter); } else setMsg('Erreur, réessaie.');
+  };
+  return (
+    <article className="letter">
+      <header><Badge map={LKIND} k={l.kind} /> <b>{l.name || '—'}</b> <span className="muted small">{l.email} · {dt(l.createdAt)} · {l.lang.toUpperCase()}</span>{l.status === 'answered' ? <span className="badge b-member">Répondu {dt(l.repliedAt)}</span> : <span className="badge b-ending">À répondre</span>}</header>
+      {l.note && <p className="letter-note">« {l.note} »</p>}
+      <div className="letter-body">
+        <div className="letter-file">{expired ? <p className="muted small">Fichier effacé (30 jours).</p> : l.mime === 'application/pdf' ? <a className="btn ghost" href={src} target="_blank" rel="noopener">📄 Ouvrir le PDF</a> : <a href={src} target="_blank" rel="noopener"><img src={src} alt="Courrier" loading="lazy" /></a>}</div>
+        <div className="letter-reply">
+          <label className="small muted">Réponse ({l.lang === 'fr' ? 'français' : 'espagnol'}) · envoyée par e-mail{l.kind === 'free' ? ', avec l’offre du Club' : ' et visible dans son espace'}</label>
+          <textarea rows={10} value={reply} onChange={(e) => setReply(e.target.value)} />
+          <div className="letter-act"><button type="button" className="btn" disabled={busy || !reply.trim()} onClick={send}>{l.status === 'answered' ? 'Renvoyer la réponse' : 'Envoyer la réponse'}</button><button type="button" className="ghost danger" onClick={() => onDelete(l)}>Supprimer</button>{msg && <span className="small">{msg}</span>}</div>
+        </div>
+      </div>
+    </article>
+  );
+}
+function Letters({ data }) {
+  const [st, setSt] = useState(null);
+  const [f, setF] = useState('new');
+  const load = useCallback(() => fetch('/api/admin/letters', { cache: 'no-store' }).then((r) => r.json()).then(setSt).catch(() => setSt({ ok: false })), []);
+  useEffect(() => { load(); }, [load]);
+  if (!st) return <section className="card"><p className="muted">Chargement…</p></section>;
+  if (!st.ok) return <section className="card"><p>Impossible de charger les courriers.</p></section>;
+  const list = st.letters.filter((l) => (f === 'all' ? true : f === 'new' ? l.status !== 'answered' : l.status === 'answered'));
+  const members = data.subs.filter((s) => ACTIVE.includes(s.status) && s.email);
+  const adjust = async (email, delta) => { await post('/api/admin/letters', { action: 'count', email, delta }); load(); };
+  const del = async (l) => { if (!window.confirm('Supprimer ce courrier et son fichier ?')) return; await post('/api/admin/letters', { id: l.id }, 'DELETE'); load(); };
+  const saved = (rec) => setSt((x) => ({ ...x, letters: x.letters.map((y) => (y.id === rec.id ? rec : y)) }));
+  const nNew = st.letters.filter((l) => l.status !== 'answered').length;
+  return (
+    <>
+      <section className="card">
+        <header className="card-h"><h2>Courriers <small>{nNew} à répondre</small></h2></header>
+        <p className="muted small">Premier courrier gratuit (1 par e-mail) et courriers des membres du Club ({st.quota} par mois). Réponds en 48 h. Les fichiers sont effacés après 30 jours.</p>
+        <div className="toolbar"><div className="seg">{[['new', 'À répondre'], ['done', 'Répondus'], ['all', 'Tous']].map(([k, v]) => <button key={k} type="button" aria-pressed={f === k} onClick={() => setF(k)}>{v}</button>)}</div></div>
+        {list.length ? list.map((l) => <LetterCard key={l.id} l={l} onSaved={saved} onDelete={del} />) : <Empty>Aucun courrier dans cette liste.</Empty>}
+      </section>
+      <section className="card">
+        <header className="card-h"><h2>Compteur des membres <small>{st.month}</small></h2></header>
+        <p className="muted small">Les courriers envoyés par l’espace membre sont comptés automatiquement. Ajoute ceux reçus par WhatsApp avec +.</p>
+        {members.length ? (
+          <div className="table-wrap"><table className="table"><thead><tr><th>Membre</th><th className="num">Ce mois</th><th /></tr></thead><tbody>
+            {members.map((m) => { const n = st.counts[(m.email || '').toLowerCase()] || 0; return (
+              <tr key={m.id}><td><b>{m.name || '—'}</b><div className="muted small">{m.email}</div></td><td className="num"><b className={n >= st.quota ? 'refund' : ''}>{n} / {st.quota}</b></td><td className="cnt-act"><button type="button" className="ghost" onClick={() => adjust(m.email, -1)} aria-label="Retirer un courrier">−</button><button type="button" className="ghost" onClick={() => adjust(m.email, 1)} aria-label="Ajouter un courrier">+</button></td></tr>); })}
+          </tbody></table></div>
+        ) : <Empty>Aucun membre actif pour l’instant.</Empty>}
+      </section>
+    </>
+  );
+}
+
+
+/* ---------- testimonials ---------- */
+const EMPTY_T = { name: '', country: '', service: 'club', text_es: '', text_fr: '', published: true };
+function Testimonials() {
+  const [list, setList] = useState(null);
+  const [f, setF] = useState(EMPTY_T);
+  const [msg, setMsg] = useState('');
+  const load = useCallback(() => fetch('/api/admin/testimonials', { cache: 'no-store' }).then((r) => r.json()).then((j) => setList(j.list || [])).catch(() => setList([])), []);
+  useEffect(() => { load(); }, [load]);
+  const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+  const save = async (e) => {
+    e.preventDefault(); setMsg('');
+    const r = await post('/api/admin/testimonials', f).then((x) => x.json()).catch(() => ({}));
+    if (r.ok) { setF(EMPTY_T); setMsg('Enregistré ✓ (visible sur le site en quelques secondes)'); load(); } else setMsg('Indique au moins le prénom et le texte.');
+  };
+  const edit = (t) => setF({ id: t.id, createdAt: t.createdAt, name: t.name, country: t.country, service: t.service, text_es: t.text[0], text_fr: t.text[1], published: t.published });
+  const del = async (t) => { if (!window.confirm('Supprimer ce témoignage ?')) return; await post('/api/admin/testimonials', { id: t.id }, 'DELETE'); load(); };
+  return (
+    <>
+      <section className="card">
+        <header className="card-h"><h2>{f.id ? 'Modifier le témoignage' : 'Ajouter un témoignage'}</h2></header>
+        <p className="muted small">Uniquement de vrais clients, avec leur accord (prénom et pays suffisent). Rien ne s’affiche sur le site tant qu’aucun témoignage n’est publié.</p>
+        <form className="testi-form" onSubmit={save}>
+          <label>Prénom<input value={f.name} onChange={set('name')} maxLength={40} required /></label>
+          <label>Pays<input value={f.country} onChange={set('country')} maxLength={40} placeholder="Colombia" /></label>
+          <label>Service<select value={f.service} onChange={set('service')}><option value="club">Club</option><option value="asesoria">Accompagnement CHF 39</option><option value="carta">Courrier gratuit</option></select></label>
+          <label className="wide">Texte en espagnol<textarea rows={3} value={f.text_es} onChange={set('text_es')} maxLength={500} /></label>
+          <label className="wide">Texte en français (facultatif)<textarea rows={3} value={f.text_fr} onChange={set('text_fr')} maxLength={500} /></label>
+          <label className="chk"><input type="checkbox" checked={f.published} onChange={set('published')} /> Publié sur le site</label>
+          <div className="wide letter-act"><button className="btn" type="submit">{f.id ? 'Enregistrer' : 'Ajouter'}</button>{f.id && <button type="button" className="ghost" onClick={() => setF(EMPTY_T)}>Annuler</button>}{msg && <span className="small">{msg}</span>}</div>
+        </form>
+      </section>
+      <section className="card">
+        <header className="card-h"><h2>Témoignages <small>{list ? list.length : '…'}</small></h2></header>
+        {list && list.length ? list.map((t) => (
+          <div key={t.id} className="testi-row"><div><b>{t.name}</b> <span className="muted small">{t.country} · {t.service}</span> {t.published ? <span className="badge b-member">Publié</span> : <span className="badge">Masqué</span>}<p className="small">« {t.text[0]} »</p></div><div className="letter-act"><button type="button" className="ghost" onClick={() => edit(t)}>Modifier</button><button type="button" className="ghost danger" onClick={() => del(t)}>Supprimer</button></div></div>
+        )) : <Empty>Aucun témoignage pour l’instant. Demande à tes premiers clients satisfaits !</Empty>}
+      </section>
+    </>
   );
 }
 
@@ -671,7 +782,7 @@ function Settings({ st }) {
 }
 
 /* ---------- shell ---------- */
-const NAV = [['dash', 'Tableau de bord', '📊'], ['stats', 'Statistiques', '📈'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['settings', 'Réglages', '⚙️']];
+const NAV = [['dash', 'Tableau de bord', '📊'], ['letters', 'Courriers', '📩'], ['stats', 'Statistiques', '📈'], ['clients', 'Clients', '👥'], ['payments', 'Paiements', '💳'], ['members', 'Membres Club', '⭐'], ['agenda', 'Agenda', '📅'], ['leads', 'Demandes', '✉️'], ['news', 'Actualités', '📰'], ['testi', 'Témoignages', '💬'], ['settings', 'Réglages', '⚙️']];
 
 function useErrorReporting() {
   useEffect(() => {
@@ -732,6 +843,7 @@ export default function Admin() {
           <div className="row-btns"><span className="muted small">Mis à jour à {new Date(data.now).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</span><button type="button" className="ghost" onClick={load}>Actualiser</button></div>
         </header>
         {sec === 'dash' && <Dashboard data={data} go={setSec} openClient={setClient} st={st} />}
+        {sec === 'letters' && <Letters data={data} />}
         {sec === 'stats' && <Stats />}
         {sec === 'clients' && <Clients data={data} openClient={setClient} />}
         {sec === 'payments' && <Payments data={data} onReset={load} />}
@@ -739,6 +851,7 @@ export default function Admin() {
         {sec === 'agenda' && <Agenda onChanged={load} />}
         {sec === 'leads' && <Leads data={data} setData={setData} />}
         {sec === 'news' && <NewsAdmin />}
+        {sec === 'testi' && <Testimonials />}
         {sec === 'settings' && <Settings st={st} />}
       </main>
       {cur && <ClientDrawer c={cur} onClose={() => setClient(null)} onNote={saveNote} onDeleted={() => { setClient(null); load(); }} />}
