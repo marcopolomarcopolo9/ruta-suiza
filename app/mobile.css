@@ -614,3 +614,19 @@ html{-webkit-tap-highlight-color:transparent}
 .ex-letter p,.ex-answer p{margin:0 0 8px;max-width:none}
 .ex-letter small,.ex-answer small{display:block;font-family:var(--font, inherit);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .ex-answer{background:color-mix(in srgb,#16a34a 7%,var(--surface));border:1.5px solid color-mix(in srgb,#16a34a 35%,var(--line))}
+/* Home: both offers */
+.offers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+@media (max-width:760px){.offers{grid-template-columns:1fr}}
+.offer{position:relative;display:flex;flex-direction:column;gap:6px;padding:22px;border-radius:20px;background:var(--surface);border:1.5px solid var(--line)}
+.offer.feat{border-color:#16a34a;box-shadow:0 16px 36px -26px rgba(22,163,74,.6)}
+.offer .tag{position:absolute;top:-11px;right:18px}
+.offer h3{font-size:19px;margin:0}
+.offer .price{font-size:30px;font-weight:800;line-height:1.1}
+.offer .price small{font-size:14px;font-weight:600;color:var(--muted)}
+.o-for{margin:0 0 6px;color:var(--muted);font-size:15px;max-width:none}
+.offer ul{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:7px;font-size:14.5px}
+.offer li{display:flex;gap:8px;align-items:flex-start}
+.offer li svg{flex:0 0 auto;margin-top:4px}
+.offer .btn{margin-top:auto;justify-content:center;text-align:center}
+.o-more{font-size:14px;font-weight:600;text-align:center;margin-top:6px}
+.offers-sec > .paynote{display:block;text-align:center;margin-top:10px}
