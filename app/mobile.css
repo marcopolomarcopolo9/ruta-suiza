@@ -548,3 +548,4 @@ html{-webkit-tap-highlight-color:transparent}
 .tdl a{font-size:13.5px;font-weight:600;display:inline-block;margin-top:4px}
 @media (max-width:480px){.tdl li{grid-template-columns:1fr;gap:4px}}
 .tool-how{margin-top:8px}
+.ya-box{border-left-color:#16a34a}
