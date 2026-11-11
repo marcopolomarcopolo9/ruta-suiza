@@ -29,7 +29,10 @@ module.exports = {
   poweredByHeader: false,
   trailingSlash: false,
   async redirects() {
-    return [{ source: '/', destination: '/es', permanent: false }];
+    return [
+      { source: '/', destination: '/es', permanent: false },
+      { source: '/:lang(es|fr)/paises/:c(ve|cu)', destination: '/:lang/paises', permanent: true },
+    ];
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
